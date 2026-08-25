@@ -1,0 +1,1490 @@
+.homepage-variation {
+  display: flex;
+  flex-direction: column;
+  min-height: 1024px;
+  align-items: flex-start;
+  position: relative;
+  background-color: #f9f6f0;
+}
+
+.homepage-variation .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 80px;
+  align-self: stretch;
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid;
+  border-color: #e4dfd5;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .div {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .logo {
+  width: 48px;
+  height: 72px;
+  position: relative;
+  object-fit: cover;
+}
+
+.homepage-variation .title-stack {
+  display: inline-flex;
+  gap: 2px;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .school-name {
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Bold", Helvetica;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.1px;
+  position: relative;
+  color: #0a1931;
+  line-height: normal;
+}
+
+.homepage-variation .motto {
+  position: relative;
+  width: fit-content;
+  font-family: "Instrument Serif-Italic", Helvetica;
+  font-weight: 400;
+  font-style: italic;
+  color: #e25b38;
+  font-size: 16px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .navbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 32px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .text-wrapper {
+  position: relative;
+  width: fit-content;
+  font-family: "Geist-SemiBold", Helvetica;
+  font-weight: 600;
+  color: #e25b38;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-2 {
+  position: relative;
+  width: fit-content;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #1c1c1c;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .CTA-button {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 24px;
+  position: relative;
+  flex: 0 0 auto;
+  background-color: #0a1931;
+  border-radius: 100px;
+}
+
+.homepage-variation .text-wrapper-3 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-SemiBold", Helvetica;
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .hero-section {
+  display: flex;
+  height: 680px;
+  align-items: flex-start;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  background-color: #f9f6f0;
+}
+
+.homepage-variation .hero-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 32px;
+  padding: 100px 40px 80px 80px;
+  position: relative;
+  flex: 1;
+  flex-grow: 1;
+}
+
+.homepage-variation .title-group {
+  display: flex;
+  gap: 24px;
+  align-self: stretch;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .div-2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .rectangle {
+  position: relative;
+  width: 24px;
+  height: 2px;
+  background-color: #e25b38;
+}
+
+.homepage-variation .text-wrapper-4 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Bold", Helvetica;
+  font-weight: 700;
+  color: #e25b38;
+  font-size: 12px;
+  letter-spacing: 0.18px;
+  line-height: normal;
+}
+
+.homepage-variation .headline {
+  position: relative;
+  align-self: stretch;
+  font-family: "Instrument Serif-Regular", Helvetica;
+  font-weight: 400;
+  color: #0a1931;
+  font-size: 64px;
+  letter-spacing: 0;
+  line-height: 67.2px;
+}
+
+.homepage-variation .description {
+  position: relative;
+  align-self: stretch;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #6e7787;
+  font-size: 16px;
+  letter-spacing: 0;
+  line-height: 24px;
+}
+
+.homepage-variation .div-3 {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .portal-BTN {
+  display: inline-flex;
+  align-items: flex-start;
+  padding: 16px 32px;
+  position: relative;
+  flex: 0 0 auto;
+  background-color: #e25b38;
+  border-radius: 8px;
+}
+
+.homepage-variation .text-wrapper-5 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-SemiBold", Helvetica;
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 15px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .gallery-BTN {
+  display: inline-flex;
+  padding: 16px 32px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  border: 1.5px solid;
+  border-color: #0a1931;
+  align-items: flex-start;
+  position: relative;
+}
+
+.homepage-variation .text-wrapper-6 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1.5px;
+  font-family: "Geist-SemiBold", Helvetica;
+  font-weight: 600;
+  color: #0a1931;
+  font-size: 15px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .hero-visual {
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  flex-grow: 1;
+}
+
+.homepage-variation .main-photo {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  object-fit: cover;
+}
+
+.homepage-variation .gradient-scrim {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 25, 49, 0.9) 0%,
+    rgba(0, 0, 0, 0) 60%
+  );
+}
+
+.homepage-variation .float-card {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px;
+  position: absolute;
+  right: 40px;
+  bottom: 40px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0px 10px 20px #0000001a;
+}
+
+.homepage-variation .text-wrapper-7 {
+  font-size: 32px;
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Instrument Serif-Regular", Helvetica;
+  font-weight: 400;
+  color: #e25b38;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-8 {
+  position: relative;
+  width: fit-content;
+  font-family: "Geist-SemiBold", Helvetica;
+  font-weight: 600;
+  color: #0a1931;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .p {
+  position: relative;
+  align-self: stretch;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #6e7787;
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .philosophy-section {
+  flex-direction: column;
+  gap: 56px;
+  padding: 96px 80px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .philosophy-row {
+  gap: 80px;
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .col-left {
+  width: 450px;
+  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+}
+
+.homepage-variation .text-wrapper-9 {
+  position: relative;
+  align-self: stretch;
+  margin-top: -1px;
+  font-family: "Instrument Serif-Regular", Helvetica;
+  font-weight: 400;
+  color: #0a1931;
+  font-size: 48px;
+  letter-spacing: 0;
+  line-height: 52.8px;
+}
+
+.homepage-variation .rectangle-2 {
+  position: relative;
+  width: 80px;
+  height: 4px;
+  background-color: #e25b38;
+}
+
+.homepage-variation .div-4 {
+  gap: 24px;
+  flex: 1;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+}
+
+.homepage-variation .text-wrapper-10 {
+  position: relative;
+  align-self: stretch;
+  margin-top: -1px;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #1c1c1c;
+  font-size: 18px;
+  letter-spacing: 0;
+  line-height: 28.8px;
+}
+
+.homepage-variation .text-wrapper-11 {
+  position: relative;
+  align-self: stretch;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #6e7787;
+  font-size: 15px;
+  letter-spacing: 0;
+  line-height: 24px;
+}
+
+.homepage-variation .stats-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+  background-color: #f9f6f0;
+  border-radius: 16px;
+}
+
+.homepage-variation .stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  flex: 1;
+  flex-grow: 1;
+}
+
+.homepage-variation .text-wrapper-12 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Instrument Serif-Regular", Helvetica;
+  font-weight: 400;
+  color: #e25b38;
+  font-size: 40px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-13 {
+  position: relative;
+  width: fit-content;
+  font-family: "Geist-SemiBold", Helvetica;
+  font-weight: 600;
+  color: #0a1931;
+  font-size: 13px;
+  letter-spacing: 0.07px;
+  line-height: normal;
+}
+
+.homepage-variation .div-5 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 48px;
+  padding: 96px 80px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+  background-color: #f9f6f0;
+}
+
+.homepage-variation .section-header {
+  align-items: flex-end;
+  justify-content: space-between;
+  display: flex;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .header-left {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .text-wrapper-14 {
+  position: relative;
+  width: fit-content;
+  font-family: "Instrument Serif-Regular", Helvetica;
+  font-weight: 400;
+  color: #0a1931;
+  font-size: 48px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-15 {
+  position: relative;
+  width: 380px;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #6e7787;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .div-6 {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .program-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  flex: 1;
+  flex-grow: 1;
+  background-color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid;
+  border-color: #e4dfd5;
+}
+
+.homepage-variation .card-image {
+  height: 220px;
+  object-fit: cover;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+}
+
+.homepage-variation .card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px;
+  flex: 0 0 auto;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+}
+
+.homepage-variation .text-wrapper-16 {
+  align-self: stretch;
+  margin-top: -1px;
+  font-family: "Instrument Serif-Regular", Helvetica;
+  font-weight: 400;
+  font-size: 28px;
+  letter-spacing: 0;
+  position: relative;
+  color: #0a1931;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-17 {
+  position: relative;
+  align-self: stretch;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #6e7787;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 21px;
+}
+
+.homepage-variation .text-wrapper-18 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-SemiBold", Helvetica;
+  font-weight: 600;
+  color: #e25b38;
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .div-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.homepage-variation .vector-wrapper {
+  position: relative;
+  width: 14px;
+  height: 14px;
+}
+
+.homepage-variation .vector {
+  position: absolute;
+  width: 86.31%;
+  height: 86.31%;
+  top: 13.69%;
+  left: 13.69%;
+}
+
+.homepage-variation .facilities-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 72px;
+  padding: 96px 80px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+  background-color: #ffffff;
+}
+
+.homepage-variation .section-header-2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .rows {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 64px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .facility-row {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .tag {
+  display: inline-flex;
+  align-items: flex-start;
+  padding: 6px 12px;
+  position: relative;
+  flex: 0 0 auto;
+  background-color: #e25b38;
+  border-radius: 100px;
+}
+
+.homepage-variation .text-wrapper-19 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Bold", Helvetica;
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 11px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-20 {
+  position: relative;
+  align-self: stretch;
+  font-family: "Instrument Serif-Regular", Helvetica;
+  font-weight: 400;
+  color: #0a1931;
+  font-size: 36px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-21 {
+  position: relative;
+  align-self: stretch;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #6e7787;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 22.4px;
+}
+
+.homepage-variation .image-col {
+  display: flex;
+  height: 340px;
+  align-items: flex-start;
+  position: relative;
+  flex: 1;
+  flex-grow: 1;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.homepage-variation .img {
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  flex-grow: 1;
+  object-fit: cover;
+}
+
+.homepage-variation .section-header-3 {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  display: flex;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .profile-card {
+  align-items: center;
+  gap: 32px;
+  padding: 32px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid;
+  border-color: #e4dfd5;
+  display: flex;
+  position: relative;
+  flex: 1;
+  flex-grow: 1;
+}
+
+.homepage-variation .avatar {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.homepage-variation .profile-details {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  display: flex;
+  position: relative;
+  flex: 1;
+  flex-grow: 1;
+}
+
+.homepage-variation .text-wrapper-22 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Instrument Serif-Regular", Helvetica;
+  font-weight: 400;
+  color: #0a1931;
+  font-size: 28px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-23 {
+  position: relative;
+  width: fit-content;
+  font-family: "Geist-Bold", Helvetica;
+  font-weight: 700;
+  color: #e25b38;
+  font-size: 13px;
+  letter-spacing: 0.13px;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-24 {
+  position: relative;
+  align-self: stretch;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #6e7787;
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: 19.5px;
+}
+
+.homepage-variation .avatar-2 {
+  background-color: #c4c4c4;
+  border-radius: 60px;
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.homepage-variation .testimonials-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 48px;
+  padding: 96px 80px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+  background-color: #ffffff;
+}
+
+.homepage-variation .testimonial-bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px;
+  position: relative;
+  flex: 1;
+  flex-grow: 1;
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid;
+  border-color: #e4dfd5;
+}
+
+.homepage-variation .text-wrapper-25 {
+  position: relative;
+  align-self: stretch;
+  margin-top: -1px;
+  font-family: "Instrument Serif-Italic", Helvetica;
+  font-weight: 400;
+  font-style: italic;
+  color: #1c1c1c;
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 0;
+  line-height: 25.2px;
+}
+
+.homepage-variation .rectangle-3 {
+  position: relative;
+  width: 12px;
+  height: 1px;
+  background-color: #e25b38;
+}
+
+.homepage-variation .text-wrapper-26 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Bold", Helvetica;
+  font-weight: 700;
+  color: #0a1931;
+  font-size: 12px;
+  letter-spacing: 0.06px;
+  line-height: normal;
+}
+
+.homepage-variation .gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 96px 80px;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+  background-color: #f9f6f0;
+  align-items: flex-start;
+  position: relative;
+}
+
+.homepage-variation .section-header-4 {
+  align-items: center;
+  justify-content: space-between;
+  display: flex;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .text-wrapper-27 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Instrument Serif-Regular", Helvetica;
+  font-weight: 400;
+  color: #0a1931;
+  font-size: 40px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-28 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-SemiBold", Helvetica;
+  font-weight: 600;
+  color: #e25b38;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .div-wrapper-2 {
+  display: flex;
+  flex-direction: column;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.homepage-variation .img-wrapper {
+  position: relative;
+  width: 16px;
+  height: 16px;
+}
+
+.homepage-variation .vector-2 {
+  position: absolute;
+  width: 85.42%;
+  height: 85.42%;
+  top: 14.58%;
+  left: 14.58%;
+}
+
+.homepage-variation .gallery-frame {
+  display: flex;
+  height: 220px;
+  flex: 1;
+  flex-grow: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  align-items: flex-start;
+  position: relative;
+}
+
+.homepage-variation .admissions-CTA {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  padding: 80px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+  background-color: #0a1931;
+}
+
+.homepage-variation .text-content {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .admissions-now-open {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Bold", Helvetica;
+  font-weight: 700;
+  color: #e25b38;
+  font-size: 12px;
+  letter-spacing: 0.24px;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-29 {
+  position: relative;
+  width: 800px;
+  font-family: "Instrument Serif-Regular", Helvetica;
+  font-weight: 400;
+  color: #ffffff;
+  font-size: 48px;
+  text-align: center;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-30 {
+  position: relative;
+  width: 600px;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #e4dfd5;
+  font-size: 15px;
+  text-align: center;
+  letter-spacing: 0;
+  line-height: 22.5px;
+}
+
+.homepage-variation .CTA-button-2 {
+  display: inline-flex;
+  align-items: center;
+  padding: 16px 40px;
+  position: relative;
+  flex: 0 0 auto;
+  background-color: #e25b38;
+  border-radius: 100px;
+}
+
+.homepage-variation .text-wrapper-31 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Bold", Helvetica;
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 15px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .footer {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 64px;
+  padding: 80px 80px 40px;
+  background-color: #0a1931;
+  border: 1px solid;
+  border-color: #ffffff1a;
+  display: flex;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .footer-top {
+  align-items: flex-start;
+  justify-content: space-between;
+  display: flex;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .brand-block {
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+  align-items: flex-start;
+  gap: 24px;
+  position: relative;
+}
+
+.homepage-variation .logo-2 {
+  width: 40px;
+  height: 60px;
+  position: relative;
+  object-fit: cover;
+}
+
+.homepage-variation .text-wrapper-32 {
+  position: relative;
+  width: fit-content;
+  font-family: "Geist-Bold", Helvetica;
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 18px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-33 {
+  position: relative;
+  align-self: stretch;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #e4dfd5;
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: 20.8px;
+}
+
+.homepage-variation .contacts {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .frame {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .phone {
+  position: relative;
+  width: 13.67px;
+  height: 13.67px;
+  background-image: url(./img/vector-2.svg);
+  background-size: 100% 100%;
+}
+
+.homepage-variation .text-wrapper-34 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #ffffff;
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .vector-3 {
+  position: absolute;
+  width: 98.81%;
+  height: 90.47%;
+  top: 9.53%;
+  left: 0;
+}
+
+.homepage-variation .text-wrapper-35 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #ffffff;
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: normal;
+  text-decoration: underline;
+}
+
+.homepage-variation .links-col {
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+}
+
+.homepage-variation .text-wrapper-36 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Bold", Helvetica;
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 14px;
+  letter-spacing: 0.07px;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-37 {
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #e4dfd5;
+  position: relative;
+  width: fit-content;
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .links-col-2 {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+}
+
+.homepage-variation .whatsapp-btn {
+  display: inline-flex;
+  gap: 8px;
+  padding: 10px 16px;
+  flex: 0 0 auto;
+  background-color: #25d366;
+  border-radius: 100px;
+  align-items: center;
+  position: relative;
+}
+
+.homepage-variation .vector-4 {
+  position: absolute;
+  width: 97.92%;
+  height: 97.92%;
+  top: 2.08%;
+  left: 2.08%;
+}
+
+.homepage-variation .text-wrapper-38 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Bold", Helvetica;
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .text-wrapper-39 {
+  position: relative;
+  align-self: stretch;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #e4dfd5;
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 16.8px;
+}
+
+.homepage-variation .footer-bottom {
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0px 0px;
+  border: 1px solid;
+  border-color: #ffffff1a;
+  display: flex;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.homepage-variation .text-wrapper-40 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1px;
+  font-family: "Geist-Regular", Helvetica;
+  font-weight: 400;
+  color: #e4dfd5;
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.homepage-variation .legal-links {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 24px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+
+
+/*Responsive Design*/
+@media (max-width: 480px) {
+  .homepage-variation {
+    display: flex;
+    min-height: 1024px;
+    align-items: flex-start;
+    position: relative;
+
+  }}
+
+  @media (max-width: 480px) {
+    .homepage-variation .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      align-self: stretch;
+      width: 100%;
+      background-color: #ffffff;
+      border-top-style: none;
+      border-right-style: none;
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
+      border-left-style: none;
+      border-color: #e4dfd5;
+      position: relative;
+      flex: 0 0 auto;
+    }}
+
+@media (max-width: 480px) {
+  .homepage-variation .div{
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    flex: 0 0 auto;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .logo {
+    width: 28px;
+    height: 42px;
+    position: relative;
+    object-fit: cover;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .title-stack {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    position: relative;
+    flex: 0 0 auto;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .school-name {
+    width: fit-content;
+    margin-top: -1px;
+    font-family: "Geist-Bold", Helvetica;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.03px;
+    position: relative;
+    color: #0a1931;
+    line-height: normal;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px;
+    position: relative;
+    flex: 0 0 auto;
+    background-color: #f9f6f0;
+    border-radius: 100px;
+    justify-content: center;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .menu-icon {
+    display: flex;
+    flex-direction: column;
+    width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .menu {
+    position: relative;
+    width: 20px;
+    height: 20px;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .vector {
+    position: absolute;
+    width: 88.33%;
+    height: 84.17%;
+    top: 15.83%;
+    left: 11.67%;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .hero-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 32px 16px;
+    flex: 0 0 auto;
+    background-color: #f9f6f0;
+    position: relative;
+    align-self: stretch;
+    width: 100%;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .div-2 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    flex: 0 0 auto;
+    position: relative;
+    align-self: stretch;
+    width: 100%;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .div3 {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    flex: 0 0 auto;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .rectangle {
+    position: relative;
+    width: 16px;
+    height: 2px;
+    background-color: #e25b38;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .text-wrapper {
+    position: relative;
+    width: fit-content;
+    margin-top: -1px;
+    font-family: "Geist-Bold", Helvetica;
+    font-weight: 700;
+    color: #e25b38;
+    font-size: 11px;
+    letter-spacing: 0.13px;
+    line-height: normal;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .headline {
+    position: relative;
+    align-self: stretch;
+    font-weight: 400;
+    font-size: 38px;
+    letter-spacing: 0;
+    line-height: 41.8px;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .description {
+    position: relative;
+    align-self: stretch;
+    font-weight: 400;
+    font-size: 14px;
+    letter-spacing: 0;
+    line-height: 21px;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .div4 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    position: relative;
+    align-self: stretch;
+    width: 100%;
+    flex: 0 0 auto;
+  }}
+
+  @media (max-width: 480px) {
+  .homepage-variation .portal-BTN {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 24px;
+    position: relative;
+    align-self: stretch;
+    width: 100%;
+    flex: 0 0 auto;
+    background-color: #e25b38
+  }

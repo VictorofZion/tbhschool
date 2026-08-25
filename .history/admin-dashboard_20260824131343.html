@@ -1,0 +1,46 @@
+<!-- Update inside admin-dashboard.html: Tab 2 Create User Form -->
+<section id="createUserTab" class="tab-content">
+  <div class="card">
+    <form id="createUserForm" onsubmit="handleCreateUser(event)">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="fullName" required />
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="userEmail" required />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="userPassword" required />
+        </div>
+        <div class="form-group">
+          <label>Profile Image URL (Display Picture)</label>
+          <input type="url" id="avatarUrl" placeholder="https://example.com/photo.jpg" />
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="userRole" onchange="toggleStudentFields()" required>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group student-field">
+          <label>Registration Number</label>
+          <input type="text" id="regNumber" placeholder="TBHS/2026/001" />
+        </div>
+        <div class="form-group student-field">
+          <label>Unique Serial Number</label>
+          <input type="text" id="serialNumber" placeholder="SN-TBHS-982134 (Auto-generated if left blank)" />
+        </div>
+        <div class="form-group student-field">
+          <label>Class Level</label>
+          <input type="text" id="classLevel" placeholder="JS1 or SS2" />
+        </div>
+      </div>
+      <button type="submit" class="btn-submit">Create Account</button>
+    </form>
+  </div>
+</section>

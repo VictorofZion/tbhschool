@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher Portal - Tetotim Blessed Hope School</title>
+  <link rel="stylesheet" href="global.css" />
+  <style>
+    :root {
+      --primary-navy: #0a1931;
+      --accent-coral: #e25b38;
+      --bg-cream: #f9f6f0;
+      --border-color: #e4dfd5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Geist-Regular', sans-serif;
+      background-color: var(--bg-cream);
+      color: #1c1c1c;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 260px;
+      background-color: var(--primary-navy);
+      color: #ffffff;
+      padding: 32px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .brand img { width: 36px; height: auto; }
+    .brand h2 { font-family: 'Geist-Bold', sans-serif; font-size: 16px; margin: 0; }
+    .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+    .card {
+      background: #ffffff;
+      padding: 28px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      max-width: 600px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    label { font-size: 13px; font-weight: 600; color: var(--primary-navy); }
+    input, select {
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .btn-submit {
+      background-color: var(--accent-coral);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      width: 100%;
+    }
+    .logout-btn {
+      background-color: rgba(255,255,255,0.1);
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div>
+      <div class="brand">
+        <img src="items/logo.png" alt="Logo" />
+        <h2>TBHS Teacher</h2>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign Out</button>
+  </aside>
+
+  <main class="main-content">
+    <h1 style="font-family: 'Instrument Serif-Regular', serif; font-size: 36px; color: var(--primary-navy); margin-top: 0;">Upload Academic Scores</h1>
+
+    <div class="card">
+      <form id="resultForm" onsubmit="handleResultUpload(event)">
+        <div class="form-group">
+          <label>Student Database UUID</label>
+          <input type="text" id="studentId" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" required />
+        </div>
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" id="subject" placeholder="Mathematics, English, Physics" required />
+        </div>
+        <div class="form-group">
+          <label>Continuous Assessment (Test Score / 40)</label>
+          <input type="number" id="testScore" min="0" max="40" step="0.1" required />
+        </div>
+        <div class="form-group">
+          <label>Exam Score (/ 60)</label>
+          <input type="number" id="examScore" min="0" max="60" step="0.1" required />
+        </div>
+        <div class="form-group">
+          <label>Term</label>
+          <select id="term" required>
+            <option value="1st Term">1st Term</option>
+            <option value="2nd Term">2nd Term</option>
+            <option value="3rd Term">3rd Term</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Academic Session</label>
+          <input type="text" id="session" value="2026/2027" required />
+        </div>
+        <button type="submit" class="btn-submit">Submit Grade Record</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = "http://localhost:5000/api";
+    const token = localStorage.getItem("tbhs_token");
+    const user = JSON.parse(localStorage.getItem("tbhs_user") || "{}");
+
+    if (!token || (user.role !== "teacher" && user.role !== "admin")) {
+      window.location.href = "login.html";
+    }
+
+    async function handleResultUpload(e) {
+      e.preventDefault();
+      const payload = {
+        student_id: document.getElementById("studentId").value,
+        subject: document.getElementById("subject").value,
+        test_score: parseFloat(document.getElementById("testScore").value),
+        exam_score: parseFloat(document.getElementById("examScore").value),
+        term: document.getElementById("term").value,
+        session: document.getElementById("session").value
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/academic/results`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        alert("Academic record saved successfully!");
+        document.getElementById("resultForm").reset();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>

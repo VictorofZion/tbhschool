@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Portal - Tetotim Blessed Hope School</title>
+  <link rel="stylesheet" href="global.css" />
+  <!-- Remita Inline Script -->
+  <script src="https://remitademo.net/payment/v1/remita-pay-inline.bundle.js"></script>
+  <style>
+    :root {
+      --primary-navy: #0a1931;
+      --accent-coral: #e25b38;
+      --bg-cream: #f9f6f0;
+      --border-color: #e4dfd5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Geist-Regular', sans-serif;
+      background-color: var(--bg-cream);
+      color: #1c1c1c;
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    /* Sidebar Layout */
+    .sidebar {
+      width: 260px;
+      background-color: var(--primary-navy);
+      color: #ffffff;
+      padding: 32px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .brand img { width: 36px; height: auto; }
+    .brand h2 { font-family: 'Geist-Bold', sans-serif; font-size: 16px; margin: 0; }
+    
+    .nav-links { display: flex; flex-direction: column; gap: 8px; }
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: #e4dfd5;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-btn.active, .nav-btn:hover {
+      background-color: var(--accent-coral);
+      color: #ffffff;
+    }
+
+    /* Main Content */
+    .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .header-bar h1 {
+      font-family: 'Instrument Serif-Regular', serif;
+      font-size: 36px;
+      color: var(--primary-navy);
+      margin: 0;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Status Card */
+    .status-card {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .badge {
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .badge-paid { background: #d4edda; color: #155724; }
+    .badge-unpaid { background: #f8d7da; color: #721c24; }
+    
+    .pay-btn {
+      background-color: var(--accent-coral);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Cards & Tables */
+    .card {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+    
+    table { width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 8px; overflow: hidden; }
+    th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+    th { background-color: #0a1931; color: #ffffff; }
+    
+    .btn-action {
+      background-color: var(--accent-coral);
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      display: inline-block;
+    }
+
+    .logout-btn {
+      background-color: rgba(255,255,255,0.1);
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div>
+      <div class="brand">
+        <img src="items/logo.png" alt="Logo" />
+        <h2>TBHS Portal</h2>
+      </div>
+      <nav class="nav-links">
+        <button class="nav-btn active" onclick="switchTab('overviewTab')">Overview &amp; Results</button>
+        <button class="nav-btn" onclick="switchTab('examsTab')">Online CBT Exams</button>
+        <button class="nav-btn" onclick="switchTab('assignmentsTab')">Class Assignments</button>
+      </nav>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign Out</button>
+  </aside>
+
+  <!-- Main Area -->
+  <main class="main-content">
+    <div class="header-bar">
+      <h1 id="welcomeHeading">Student Portal</h1>
+      <span id="studentClassBadge" style="font-weight: 700; color: var(--accent-coral);">Class: --</span>
+    </div>
+
+    <!-- TAB 1: Overview & Results -->
+    <section id="overviewTab" class="tab-content active">
+      <!-- Tuition Payment Status -->
+      <div class="status-card">
+        <div>
+          <h3 style="margin: 0 0 4px 0;">School Fee Status</h3>
+          <p id="studentInfo" style="margin: 0; color: #6e7787; font-size: 14px;"></p>
+        </div>
+        <div id="paymentAction"></div>
+      </div>
+
+      <!-- Academic Results Table -->
+      <h2 style="font-family: 'Instrument Serif-Regular', serif; font-size: 28px; color: var(--primary-navy);">Academic Results</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Test (40)</th>
+            <th>Exam (60)</th>
+            <th>Total Score</th>
+            <th>Term</th>
+            <th>Session</th>
+          </tr>
+        </thead>
+        <tbody id="resultsTableBody">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- TAB 2: Online CBT Exams -->
+    <section id="examsTab" class="tab-content">
+      <h2 style="font-family: 'Instrument Serif-Regular', serif; font-size: 28px; color: var(--primary-navy); margin-top: 0;">Available CBT Examinations</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Exam Title</th>
+            <th>Subject</th>
+            <th>Class</th>
+            <th>Duration</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="examsTableBody">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- TAB 3: Class Assignments -->
+    <section id="assignmentsTab" class="tab-content">
+      <h2 style="font-family: 'Instrument Serif-Regular', serif; font-size: 28px; color: var(--primary-navy); margin-top: 0;">Class Assignments &amp; Worksheets</h2>
+      <div id="assignmentsWrapper">
+        <!-- Dynamically populated cards -->
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = "http://localhost:5000/api";
+    const token = localStorage.getItem("tbhs_token");
+    const user = JSON.parse(localStorage.getItem("tbhs_user") || "{}");
+
+    if (!token || user.role !== "student") {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("welcomeHeading").innerText = `Welcome, ${user.full_name}`;
+    const studentProfile = user.studentProfile || {};
+
+    document.getElementById("studentClassBadge").innerText = `Class: ${studentProfile.class_level || 'N/A'}`;
+    document.getElementById("studentInfo").innerText = `Reg No: ${studentProfile.reg_number || 'N/A'} | Class: ${studentProfile.class_level || 'N/A'}`;
+
+    // Fee Status UI
+    const paymentContainer = document.getElementById("paymentAction");
+    if (studentProfile.fee_status === "PAID") {
+      paymentContainer.innerHTML = `<span class="badge badge-paid">FEE PAID</span>`;
+    } else {
+      paymentContainer.innerHTML = `
+        <span class="badge badge-unpaid" style="margin-right: 12px;">${studentProfile.fee_status || 'UNPAID'}</span>
+        <button class="pay-btn" onclick="paySchoolFees()">Pay Tuition via Remita</button>
+      `;
+    }
+
+    // Switch Tabs
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
+      document.getElementById(tabId).classList.add("active");
+      event.target.classList.add("active");
+
+      if (tabId === 'examsTab') loadExams();
+      if (tabId === 'assignmentsTab') loadAssignments();
+    }
+
+    // 1. Fetch Results
+    async function loadResults() {
+      if (!studentProfile.id) return;
+      try {
+        const res = await fetch(`${API_BASE}/academic/results/${studentProfile.id}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const tbody = document.getElementById("resultsTableBody");
+        tbody.innerHTML = "";
+
+        if (data.results && data.results.length > 0) {
+          data.results.forEach(r => {
+            const total = parseFloat(r.test_score) + parseFloat(r.exam_score);
+            tbody.innerHTML += `
+              <tr>
+                <td><strong>${r.subject}</strong></td>
+                <td>${r.test_score}</td>
+                <td>${r.exam_score}</td>
+                <td><strong>${total}</strong></td>
+                <td>${r.term}</td>
+                <td>${r.session}</td>
+              </tr>
+            `;
+          });
+        } else {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #6e7787;">No term results uploaded yet.</td></tr>`;
+        }
+      } catch (err) {
+        console.error("Failed to load results", err);
+      }
+    }
+
+    // 2. Fetch Available CBT Exams
+    async function loadExams() {
+      if (!studentProfile.class_level) return;
+      try {
+        const res = await fetch(`${API_BASE}/exams/class/${studentProfile.class_level}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const tbody = document.getElementById("examsTableBody");
+        tbody.innerHTML = "";
+
+        if (data.exams && data.exams.length > 0) {
+          data.exams.forEach(e => {
+            tbody.innerHTML += `
+              <tr>
+                <td><strong>${e.title}</strong></td>
+                <td>${e.subject}</td>
+                <td>${e.class_level}</td>
+                <td>${e.duration_minutes} Mins</td>
+                <td>
+                  <a href="exam.html?examId=${e.id}&duration=${e.duration_minutes}" class="btn-action">Start Exam</a>
+                </td>
+              </tr>
+            `;
+          });
+        } else {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #6e7787;">No CBT exams scheduled for your class level.</td></tr>`;
+        }
+      } catch (err) {
+        console.error("Failed to load exams", err);
+      }
+    }
+
+    // 3. Fetch Assignments
+    async function loadAssignments() {
+      if (!studentProfile.class_level) return;
+      try {
+        const res = await fetch(`${API_BASE}/assignments/class/${studentProfile.class_level}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const wrapper = document.getElementById("assignmentsWrapper");
+        wrapper.innerHTML = "";
+
+        if (data.assignments && data.assignments.length > 0) {
+          data.assignments.forEach(a => {
+            wrapper.innerHTML += `
+              <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                  <h3 style="margin: 0; color: var(--primary-navy);">${a.title}</h3>
+                  <span style="font-size: 12px; font-weight: 700; color: var(--accent-coral);">DUE: ${new Date(a.due_date).toLocaleDateString()}</span>
+                </div>
+                <p style="margin: 0 0 12px 0; font-size: 13px; color: #6e7787;"><strong>Subject:</strong> ${a.subject} | <strong>Class:</strong> ${a.class_level}</p>
+                <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.5;">${a.description || 'No additional instructions.'}</p>
+                ${a.file_url ? `<a href="${a.file_url}" target="_blank" class="btn-action">Download Worksheet / Resource File</a>` : ''}
+              </div>
+            `;
+          });
+        } else {
+          wrapper.innerHTML = `<p style="text-align: center; color: #6e7787;">No pending assignments for your class level.</p>`;
+        }
+      } catch (err) {
+        console.error("Failed to load assignments", err);
+      }
+    }
+
+    // Initiate Remita Fee Payment
+    async function paySchoolFees() {
+      try {
+        const res = await fetch(`${API_BASE}/payments/initiate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            student_id: studentProfile.id,
+            amount: 150000,
+            payer_name: user.full_name,
+            payer_email: user.email,
+            payer_phone: "08000000000"
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        const config = data.paymentConfig;
+
+        var paymentEngine = RmPaymentEngine.initiatePayment({
+          key: config.merchantId,
+          transactionId: config.orderId,
+          customerId: user.email,
+          firstName: user.full_name,
+          lastName: "Student",
+          email: user.email,
+          amount: config.amount,
+          narration: "TBHS School Fee Payment",
+          onSuccess: async function (response) {
+            await fetch(`${API_BASE}/payments/verify`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                rrr: response.RRR,
+                orderId: config.orderId,
+                studentId: studentProfile.id
+              })
+            });
+            alert("Payment Verified! Reloading...");
+            location.reload();
+          },
+          onError: function (response) {
+            alert("Payment Cancelled.");
+          }
+        });
+        paymentEngine.showPaymentWidget();
+
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    }
+
+    // Initial load
+    loadResults();
+  </script>
+</body>
+</html>
