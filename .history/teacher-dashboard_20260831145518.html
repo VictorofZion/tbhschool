@@ -147,7 +147,6 @@
 </head>
 <body>
 
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div>
       <div class="brand">
@@ -164,7 +163,6 @@
     <button class="logout-btn" onclick="logout()">Sign Out</button>
   </aside>
 
-  <!-- Main Content -->
   <main class="main-content">
     <div class="header-bar">
       <img id="teacherAvatar" src="https://via.placeholder.com/150" class="teacher-avatar" alt="Teacher Avatar" />
@@ -381,7 +379,7 @@
       document.getElementById("progressModal").style.display = "none";
     }
 
-    // 1. Fetch Roster for Student Dropdown
+    // Populate Roster Dropdown
     async function populateStudentDropdown() {
       try {
         const res = await fetch(`${API_BASE}/academic/students-list`, {
@@ -402,7 +400,7 @@
       }
     }
 
-    // 2. Submit Academic Grades
+    // Submit Academic Grades
     async function handleResultUpload(e) {
       e.preventDefault();
       const payload = {
@@ -434,7 +432,7 @@
       }
     }
 
-    // 3. Create CBT Assessment Shell
+    // Create CBT Assessment Shell
     async function handleCreateExam(e) {
       e.preventDefault();
       const payload = {
@@ -466,7 +464,7 @@
       }
     }
 
-    // 4. Add Question to CBT Assessment
+    // Add Question to CBT Assessment
     async function handleAddQuestion(e) {
       e.preventDefault();
       const exam_id = document.getElementById("qExamId").value;
@@ -503,7 +501,7 @@
       }
     }
 
-    // 5. Upload Material / Assignment with Progress Bar
+    // Upload Material / Assignment with Progress Tracker
     async function handleUploadMaterial(e) {
       e.preventDefault();
 
@@ -595,7 +593,6 @@
       window.location.href = "login.html";
     }
 
-    // Initialize dropdown on page load
     populateStudentDropdown();
   </script>
 </body>
