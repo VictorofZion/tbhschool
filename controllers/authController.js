@@ -1,15 +1,13 @@
-const express = require('express');
-const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/db');
 
-// User Login Route
-router.post('/login', async (req, res) => {
+// Login Handler Function
+const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Email and password are required.' });
+    return res.status(400).json({ error: 'Email and password are required.' });
   }
 
   try {
@@ -20,12 +18,12 @@ router.post('/login', async (req, res) => {
       .single();
 
     if (error || !user) {
-      return res.status(400).json({ success: false, message: 'Invalid email or password.' });
+      return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(400).json({ success: false, message: 'Invalid email or password.' });
+      return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
     const token = jwt.sign(
@@ -39,14 +37,47 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: user.id,
-        name: user.name,
+        full_name: user.full_name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        avatar_url: user.avatar_url
       }
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Internal server error during authentication.' });
+    res.status(500).json({ error: 'Internal server error during authentication.' });
   }
-});
+};
 
-module.exports = router;
+// Create User Handler Function (Admin Route)
+const createUser = async (req, res) => {
+  const { full_name, email, password, role, avatar_url, reg_number, serial_number, class_level } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .insert([{ full_name, email, password: hashedPassword, role, avatar_url }])
+      .select()
+      .single();
+
+    if (userError) return res.status(400).json({ error: userError.message });
+
+    if (role === 'student') {
+      const { error: studentError } = await supabase
+        .from('students')
+        .insert([{ user_id: user.id, reg_number, serial_number, class_level }]);
+
+      if (studentError) return res.status(400).json({ error: studentError.message });
+    }
+
+    res.status(201).json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Export controller functions for authRoutes.js
+module.exports = {
+  login,
+  createUser
+};
