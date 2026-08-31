@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/db');
 
-// Login Handler Function
+// 1. User Login Handler
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -32,7 +32,7 @@ const login = async (req, res) => {
       { expiresIn: '8h' }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       token,
       user: {
@@ -44,11 +44,11 @@ const login = async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ error: 'Internal server error during authentication.' });
+    return res.status(500).json({ error: 'Internal server error during authentication.' });
   }
 };
 
-// Create User Handler Function (Admin Route)
+// 2. Account Creation Handler (Admin Endpoint)
 const createUser = async (req, res) => {
   const { full_name, email, password, role, avatar_url, reg_number, serial_number, class_level } = req.body;
 
@@ -70,13 +70,13 @@ const createUser = async (req, res) => {
       if (studentError) return res.status(400).json({ error: studentError.message });
     }
 
-    res.status(201).json({ success: true, user });
+    return res.status(201).json({ success: true, user });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 };
 
-// Export controller functions for authRoutes.js
+// Explicitly export functions as object properties
 module.exports = {
   login,
   createUser
