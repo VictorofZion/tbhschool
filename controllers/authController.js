@@ -11,9 +11,10 @@ const login = async (req, res) => {
   }
 
   try {
+    // Join the users table with the students table
     const { data: user, error } = await supabase
       .from('users')
-      .select('*')
+      .select('*, students(*)')
       .eq('email', email)
       .single();
 
@@ -21,9 +22,7 @@ const login = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
-    // Defensive check: ensure the database user record contains a password hash
     if (!user.password) {
-      console.error(`User record for ${email} is missing a password hash in Supabase.`);
       return res.status(400).json({ error: 'Invalid user account state. Please contact admin.' });
     }
 
@@ -32,16 +31,14 @@ const login = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
-    if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is missing from environment variables.");
-      return res.status(500).json({ error: 'Server configuration error.' });
-    }
-
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: '8h' }
     );
+
+    // Extract nested student details if available
+    const studentInfo = Array.isArray(user.students) ? user.students[0] : user.students;
 
     return res.status(200).json({
       success: true,
@@ -51,15 +48,19 @@ const login = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         role: user.role,
-        avatar_url: user.avatar_url
+        avatar_url: user.avatar_url,
+        student_id: studentInfo?.id || null,
+        reg_number: studentInfo?.reg_number || 'N/A',
+        class_level: studentInfo?.class_level || 'N/A',
+        serial_number: studentInfo?.serial_number || 'N/A',
+        fee_status: studentInfo?.fee_status || 'UNPAID'
       }
     });
   } catch (err) {
     console.error("Authentication Error Details:", err);
-    return res.status(500).json({ error: 'Internal server error during authentication.', details: err.message });
+    return res.status(500).json({ error: 'Internal server error during authentication.' });
   }
 };
-
 const createUser = async (req, res) => {
   const { full_name, email, password, role, avatar_url, reg_number, serial_number, class_level } = req.body;
 
@@ -71,7 +72,13 @@ const createUser = async (req, res) => {
       .select()
       .single();
 
-    if (userError) return res.status(400).json({ error: userError.message });
+    if (userError) {
+      // PostgreSQL duplicate key code
+      if (userError.code === '23505') {
+        return res.status(400).json({ error: 'An account with this email address already exists.' });
+      }
+      return res.status(400).json({ error: userError.message });
+    }
 
     if (role === 'student') {
       const { error: studentError } = await supabase
@@ -87,7 +94,6 @@ const createUser = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
-
 module.exports = {
   login,
   createUser
