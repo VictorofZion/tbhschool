@@ -1,21 +1,23 @@
 const express = require('express');
 const router = express.Router();
 
-const { 
-  uploadResult, 
-  getStudentResults, 
-  getStudentsList 
-} = require('../controllers/academicController');
+// Destructure specific middleware function (do NOT import as an object)
+const { verifyToken } = require('../middleware/auth');
 
-const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+// Destructure controller callback functions
+const { getResultsByStudent, uploadResult, getStudentsList } = require('../controllers/academicController');
 
-// Teachers & Admins view full student dropdown roster
-router.get('/students-list', authenticateToken, authorizeRoles('teacher', 'admin'), getStudentsList);
+// Ensure verifyToken is a valid function before mounting
+if (typeof verifyToken !== 'function') {
+  throw new Error('middleware/auth.js must export a valid verifyToken function.');
+}
 
-// Teachers & Admins upload grade results
-router.post('/results', authenticateToken, authorizeRoles('teacher', 'admin'), uploadResult);
+// Apply authentication middleware to all academic routes
+router.use(verifyToken);
 
-// View student results
-router.get('/results/:studentId', authenticateToken, authorizeRoles('student', 'teacher', 'admin'), getStudentResults);
+// Academic Endpoints
+router.get('/results/:studentId', getResultsByStudent);
+router.post('/results', uploadResult);
+router.get('/students-list', getStudentsList);
 
 module.exports = router;
