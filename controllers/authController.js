@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/db');
 
-// 1. User Login Handler
+// User Login Handler
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -26,6 +26,11 @@ const login = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is missing from environment variables.");
+      return res.status(500).json({ error: 'Server configuration error.' });
+    }
+
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
@@ -44,11 +49,12 @@ const login = async (req, res) => {
       }
     });
   } catch (err) {
-    return res.status(500).json({ error: 'Internal server error during authentication.' });
+    // Print the caught error directly to Vercel logs
+    console.error("Authentication Error Details:", err);
+    return res.status(500).json({ error: 'Internal server error during authentication.', details: err.message });
   }
 };
 
-// 2. Account Creation Handler (Admin Endpoint)
 const createUser = async (req, res) => {
   const { full_name, email, password, role, avatar_url, reg_number, serial_number, class_level } = req.body;
 
@@ -72,11 +78,11 @@ const createUser = async (req, res) => {
 
     return res.status(201).json({ success: true, user });
   } catch (err) {
+    console.error("Create User Error:", err);
     return res.status(500).json({ error: err.message });
   }
 };
 
-// Explicitly export functions as object properties
 module.exports = {
   login,
   createUser
