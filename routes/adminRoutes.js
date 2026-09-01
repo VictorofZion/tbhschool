@@ -1,13 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const { getAllUsers, updateUser, deleteUser, updateFeeStatus } = require('../controllers/adminController');
-const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
-router.use(authenticateToken, authorizeRoles('admin'));
+// Import Middleware
+const { verifyToken, authorizeRoles } = require('../middleware/auth');
 
-router.get('/users', getAllUsers);
-router.patch('/users/:userId', updateUser);
-router.delete('/users/:userId', deleteUser);
-router.patch('/students/:studentId/fee-status', updateFeeStatus);
+// Import Controller Handlers
+const { getUsers, updateUser, deleteUser, getDashboard } = require('../controllers/adminController');
+
+// Ensure authorizeRoles is a valid callable function before route registration
+if (typeof authorizeRoles !== 'function') {
+  throw new Error('middleware/auth.js must export a valid authorizeRoles function.');
+}
+
+// Apply authentication and role authorization to all admin endpoints
+router.use(verifyToken);
+router.use(authorizeRoles('admin'));
+
+// Admin Endpoints
+router.get('/users', getUsers);
+router.patch('/users/:id', updateUser);
+router.delete('/users/:id', deleteUser);
+router.get('/dashboard', getDashboard);
 
 module.exports = router;
