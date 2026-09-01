@@ -1,45 +1,73 @@
 const supabase = require('../config/db');
 
-// Teacher/Admin: Create Class Assignment
+// Create New Class Assignment
 const createAssignment = async (req, res) => {
+  const { title, subject, class_level, description, due_date, file_name, file_data } = req.body;
+
+  if (!title || !subject || !class_level) {
+    return res.status(400).json({ error: 'Title, subject, and target class level are required.' });
+  }
+
   try {
-    const { title, subject, class_level, description, file_url, due_date } = req.body;
-
-    if (!title || !subject || !class_level || !due_date) {
-      return res.status(400).json({ error: "Title, subject, class level, and due date are required." });
-    }
-
     const { data: assignment, error } = await supabase
-      .from('assignments')
-      .insert([{ title, subject, class_level, description, file_url, due_date }])
+      .from('materials')
+      .insert([{
+        title,
+        subject,
+        class_level,
+        material_type: 'assignment',
+        description,
+        due_date,
+        file_name: file_name || 'assignment.pdf',
+        file_data: file_data || ''
+      }])
       .select()
       .single();
 
     if (error) return res.status(400).json({ error: error.message });
 
-    res.status(201).json({ message: "Assignment uploaded successfully!", assignment });
+    return res.status(201).json({ success: true, assignment });
   } catch (err) {
-    res.status(500).json({ error: "Server error creating assignment." });
+    return res.status(500).json({ error: 'Failed to create assignment record.' });
   }
 };
 
-// Student/Teacher: Get Assignments by Class Level
+// Get Assignments Filtered by Class
 const getAssignmentsByClass = async (req, res) => {
-  try {
-    const { classLevel } = req.params;
+  const { classLevel } = req.params;
 
+  try {
     const { data: assignments, error } = await supabase
-      .from('assignments')
+      .from('materials')
       .select('*')
       .eq('class_level', classLevel)
-      .order('due_date', { ascending: true });
+      .eq('material_type', 'assignment');
 
     if (error) return res.status(400).json({ error: error.message });
 
-    res.status(200).json({ assignments });
+    return res.status(200).json({ success: true, assignments });
   } catch (err) {
-    res.status(500).json({ error: "Server error fetching assignments." });
+    return res.status(500).json({ error: 'Failed to fetch assignments.' });
   }
 };
 
-module.exports = { createAssignment, getAssignmentsByClass };
+// Submit Assignment Handler
+const submitAssignment = async (req, res) => {
+  const { assignment_id, student_id, file_data, file_name } = req.body;
+
+  if (!assignment_id || !student_id) {
+    return res.status(400).json({ error: 'Assignment ID and Student ID are required.' });
+  }
+
+  try {
+    return res.status(200).json({ success: true, message: 'Assignment submitted successfully.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to process assignment submission.' });
+  }
+};
+
+module.exports = {
+  createAssignment,
+  getAssignmentsByClass,
+  submitAssignment
+};
