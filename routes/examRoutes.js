@@ -1,20 +1,28 @@
 const express = require('express');
 const router = express.Router();
 
-const { 
-  createExam, 
-  addQuestions, 
-  getExamsByClass, 
-  getExamQuestions, 
-  submitExam 
-} = require('../controllers/examController');
+// Import authentication middleware
+const { verifyToken } = require('../middleware/auth');
 
-const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+// Import exam controller functions
+const { createExam, addQuestions, getExamsByClass, submitExam } = require('../controllers/examController');
 
-router.post('/create', authenticateToken, authorizeRoles('teacher', 'admin'), createExam);
-router.post('/add-questions', authenticateToken, authorizeRoles('teacher', 'admin'), addQuestions);
-router.get('/class/:classLevel', authenticateToken, getExamsByClass);
-router.get('/questions/:examId', authenticateToken, getExamQuestions);
-router.post('/submit', authenticateToken, authorizeRoles('student'), submitExam);
+// Verify import integrity before route mounting
+if (typeof createExam !== 'function' || typeof addQuestions !== 'function' || typeof submitExam !== 'function') {
+  throw new Error('controllers/examController.js must export valid createExam, addQuestions, and submitExam functions.');
+}
+
+if (typeof verifyToken !== 'function') {
+  throw new Error('middleware/auth.js must export a valid verifyToken function.');
+}
+
+// Apply authentication middleware to all exam routes
+router.use(verifyToken);
+
+// Exam Endpoints
+router.post('/create', createExam);
+router.post('/add-questions', addQuestions);
+router.get('/class/:classLevel', getExamsByClass);
+router.post('/submit', submitExam);
 
 module.exports = router;
