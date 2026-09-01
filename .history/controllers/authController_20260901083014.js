@@ -21,12 +21,6 @@ const login = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
-    // Defensive check: ensure the database user record contains a password hash
-    if (!user.password) {
-      console.error(`User record for ${email} is missing a password hash in Supabase.`);
-      return res.status(400).json({ error: 'Invalid user account state. Please contact admin.' });
-    }
-
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.status(400).json({ error: 'Invalid email or password.' });
@@ -55,6 +49,7 @@ const login = async (req, res) => {
       }
     });
   } catch (err) {
+    // Print the caught error directly to Vercel logs
     console.error("Authentication Error Details:", err);
     return res.status(500).json({ error: 'Internal server error during authentication.', details: err.message });
   }

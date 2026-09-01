@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/db');
 
-// User Login Handler
+// 1. User Login Handler
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -21,20 +21,9 @@ const login = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
-    // Defensive check: ensure the database user record contains a password hash
-    if (!user.password) {
-      console.error(`User record for ${email} is missing a password hash in Supabase.`);
-      return res.status(400).json({ error: 'Invalid user account state. Please contact admin.' });
-    }
-
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.status(400).json({ error: 'Invalid email or password.' });
-    }
-
-    if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is missing from environment variables.");
-      return res.status(500).json({ error: 'Server configuration error.' });
     }
 
     const token = jwt.sign(
@@ -55,11 +44,11 @@ const login = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("Authentication Error Details:", err);
-    return res.status(500).json({ error: 'Internal server error during authentication.', details: err.message });
+    return res.status(500).json({ error: 'Internal server error during authentication.' });
   }
 };
 
+// 2. Account Creation Handler (Admin Endpoint)
 const createUser = async (req, res) => {
   const { full_name, email, password, role, avatar_url, reg_number, serial_number, class_level } = req.body;
 
@@ -83,11 +72,11 @@ const createUser = async (req, res) => {
 
     return res.status(201).json({ success: true, user });
   } catch (err) {
-    console.error("Create User Error:", err);
     return res.status(500).json({ error: err.message });
   }
 };
 
+// Explicitly export functions as object properties
 module.exports = {
   login,
   createUser
