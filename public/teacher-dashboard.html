@@ -512,8 +512,9 @@
   }
 
   const file = fileInput.files[0];
-  const fileExt = file.name.split('.').pop();
-  const filePath = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
+  // Replace spaces and special characters with underscores to prevent 22023 parameter errors
+const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+const filePath = `${Date.now()}_${safeFileName}`;
 
   const SUPABASE_URL = "https://stlgpydccimcyvfnwqkh.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bGdweWRjY2ltY3l2Zm53cWtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MzI5NDUsImV4cCI6MjEwMzEwODk0NX0.NBPzbxNl4m-AU4Z5MimxeuGLk00pwJh0X5vFGc-xs1g";
@@ -523,42 +524,41 @@
 
     // STEP 1: Stream File directly to Supabase Storage via XMLHttpRequest (Tracks 0% -> 90%)
     await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/materials/${filePath}`);
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/materials/${filePath}`);
 
-      // Set mandatory headers for Supabase Storage REST endpoint
-      xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
-      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-      xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+  // Required headers
+  xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
+  xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+  xhr.setRequestHeader("x-upsert", "true"); // Allows overwriting if necessary
+  
+  // Safe Content-Type fallback
+  const mimeType = file.type && file.type.trim() !== "" ? file.type : "application/octet-stream";
+  xhr.setRequestHeader("Content-Type", mimeType);
 
-      // Listen to real-time binary byte transfer progress
-      xhr.upload.onprogress = (evt) => {
-        if (evt.lengthComputable) {
-          // Scale progress bar from 0% up to 90% during actual file upload
-          const percent = Math.round((evt.loaded / evt.total) * 90);
-          updateProgress(percent);
-        }
-      };
+  xhr.upload.onprogress = (evt) => {
+    if (evt.lengthComputable) {
+      const percent = Math.round((evt.loaded / evt.total) * 90);
+      updateProgress(percent);
+    }
+  };
 
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve();
-        } else {
-          try {
-            const errData = JSON.parse(xhr.responseText);
-            reject(new Error(errData.message || "Failed to upload file to cloud storage."));
-          } catch {
-            reject(new Error("Failed to upload file to cloud storage."));
-          }
-        }
-      };
+  xhr.onload = () => {
+    if (xhr.status >= 200 && xhr.status < 300) {
+      resolve();
+    } else {
+      try {
+        const errData = JSON.parse(xhr.responseText);
+        reject(new Error(errData.message || errData.error || "Storage upload failed."));
+      } catch {
+        reject(new Error(`Storage upload failed with status ${xhr.status}.`));
+      }
+    }
+  };
 
-      xhr.onerror = () => reject(new Error("Network error during file upload to storage."));
-      
-      // Send raw binary file stream
-      xhr.send(file);
-    });
-
+  xhr.onerror = () => reject(new Error("Network error during file upload to storage."));
+  xhr.send(file);
+});
     // STEP 2: Construct Public Access URL
     const publicFileUrl = `${SUPABASE_URL}/storage/v1/object/public/materials/${filePath}`;
 
