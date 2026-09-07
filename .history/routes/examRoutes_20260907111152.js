@@ -11,4 +11,4 @@ router.get('/class/:classLevel', getExamsByClass);
 router.get('/:examId/questions', getExamQuestions);
 router.post('/submit', submitExam);
 
-module.exports = router;
+module.exports = router;git 
