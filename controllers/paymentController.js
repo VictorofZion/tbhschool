@@ -13,9 +13,9 @@ const initiatePayment = async (req, res) => {
     const merchantId = process.env.REMITA_MERCHANT_ID;
     const serviceTypeId = process.env.REMITA_SERVICE_TYPE_ID;
     const apiKey = process.env.REMITA_API_KEY;
+    const publicKey = process.env.REMITA_PUBLIC_KEY || merchantId;
     const orderId = `TBH-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // Remita Hash Formula: SHA512(merchantId + serviceTypeId + orderId + amount + apiKey)
     const rawString = `${merchantId}${serviceTypeId}${orderId}${amount}${apiKey}`;
     const apiHash = crypto.createHash('sha512').update(rawString).digest('hex');
 
@@ -24,6 +24,7 @@ const initiatePayment = async (req, res) => {
       paymentConfig: {
         merchantId,
         serviceTypeId,
+        publicKey,
         orderId,
         amount,
         apiHash,
@@ -35,7 +36,6 @@ const initiatePayment = async (req, res) => {
     return res.status(500).json({ error: 'Failed to initiate payment transaction.' });
   }
 };
-
 // 2. Verify Payment: Check Remita Status API & Update Supabase
 const verifyPayment = async (req, res) => {
   const { rrr, studentId } = req.body;

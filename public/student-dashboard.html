@@ -320,87 +320,89 @@
     }
 
     async function paySchoolFees() {
-    if (typeof window.RmPaymentEngine === "undefined") {
-      alert("Remita SDK not loaded. Check your internet connection or script URL.");
-      return;
-    }
-
-    try {
-      showProgress("Initiating Payment Gateway...");
-
-      const res = await fetch(`${API_BASE}/payments/initiate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          student_id: studentProfile.id,
-          amount: 150000,
-          payer_name: user.full_name,
-          payer_email: user.email
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
-      hideProgress();
-      const config = data.paymentConfig;
-
-      // Correct SDK initialization call
-      const paymentEngine = window.RmPaymentEngine.init({
-        key: config.merchantId,
-        transactionId: config.orderId,
-        customerId: user.email,
-        firstName: user.full_name,
-        email: user.email,
-        amount: config.amount,
-        narration: "Tetotim Blessed Hope School Term Fee",
-        extendedData: {
-          customFields: [{ name: "serviceTypeId", value: config.serviceTypeId }]
-        },
-        onSuccess: async function (response) {
-          showProgress("Verifying Payment...");
-          const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              rrr: response.RRR || response.rrr || response.paymentReference,
-              orderId: config.orderId,
-              studentId: studentProfile.id
-            })
-          });
-
-          const verifyData = await verifyRes.json();
-          hideProgress();
-
-          if (verifyRes.ok) {
-            alert("Payment Successful! Your school fee status has been updated.");
-            location.reload();
-          } else {
-            alert(`Verification Error: ${verifyData.error}`);
-          }
-        },
-        onError: function () {
-          hideProgress();
-          alert("Payment failed or was cancelled.");
-        },
-        onClose: function () {
-          hideProgress();
-        }
-      });
-
-      paymentEngine.showPaymentWidget();
-
-    } catch (err) {
-      hideProgress();
-      alert(err.message);
-    }
+  if (typeof window.RmPaymentEngine === "undefined") {
+    alert("Remita SDK not loaded. Check your internet connection or script URL.");
+    return;
   }
+
+  try {
+    showProgress("Initiating Payment Gateway...");
+
+    const res = await fetch(`${API_BASE}/payments/initiate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        student_id: studentProfile.id,
+        amount: 150000,
+        payer_name: user.full_name,
+        payer_email: user.email
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    hideProgress();
+    const config = data.paymentConfig;
+
+    // Pass publicKey and key explicitly to satisfy Remita SDK specifications
+    const paymentEngine = window.RmPaymentEngine.init({
+      key: config.publicKey,
+      publicKey: config.publicKey,
+      merchantId: config.merchantId,
+      transactionId: config.orderId,
+      customerId: user.email,
+      firstName: user.full_name,
+      email: user.email,
+      amount: config.amount,
+      narration: "Tetotim Blessed Hope School Term Fee",
+      extendedData: {
+        customFields: [{ name: "serviceTypeId", value: config.serviceTypeId }]
+      },
+      onSuccess: async function (response) {
+        showProgress("Verifying Payment...");
+        const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            rrr: response.RRR || response.rrr || response.paymentReference,
+            orderId: config.orderId,
+            studentId: studentProfile.id
+          })
+        });
+
+        const verifyData = await verifyRes.json();
+        hideProgress();
+
+        if (verifyRes.ok) {
+          alert("Payment Successful! Your school fee status has been updated.");
+          location.reload();
+        } else {
+          alert(`Verification Error: ${verifyData.error}`);
+        }
+      },
+      onError: function () {
+        hideProgress();
+        alert("Payment failed or was cancelled.");
+      },
+      onClose: function () {
+        hideProgress();
+      }
+    });
+
+    paymentEngine.showPaymentWidget();
+
+  } catch (err) {
+    hideProgress();
+    alert(err.message);
+  }
+}
 
     function showProgress(title) {
       document.getElementById("progressTitle").innerText = title;
