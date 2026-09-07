@@ -11,7 +11,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const path = require('path');
 
 // Serve static assets from the public folder
 app.use(express.static(path.join(__dirname, 'public')));
