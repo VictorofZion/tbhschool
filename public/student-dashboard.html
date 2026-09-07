@@ -348,16 +348,17 @@
     hideProgress();
     const config = data.paymentConfig;
 
-    // Configuration object with explicit narration field
+    // Initialize Remita Widget with mandatory hash parameter
     const paymentEngine = window.RmPaymentEngine.init({
       key: config.publicKey || config.merchantId,
       merchantId: config.merchantId,
       serviceTypeId: config.serviceTypeId,
       transactionId: config.orderId,
       amount: config.amount,
-      narration: "Tetotim Blessed Hope School Term Fee", // Mandatory for Remita SDK
+      hash: config.apiHash, // CRITICAL: Required by Remita to generate RRR and proceed to payment
+      narration: "Tetotim Blessed Hope School Term Fee",
       description: "Tetotim Blessed Hope School Term Fee",
-      payerName: user.full_name,
+      payerName: user.full_name || "Student",
       payerEmail: user.email,
       payerPhone: "08000000000",
       onSuccess: async function (response) {
