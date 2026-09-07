@@ -1,9 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateUser, authorizeRoles } = require('../middleware/auth');
 
-// Import Middleware
-const { verifyToken, authorizeRoles } = require('../middleware/auth');
+// Example usage on an admin route:
+router.get('/dashboard', authenticateUser, authorizeRoles('admin'), (req, res) => {
+  res.json({ message: 'Welcome Admin' });
+});
 
+module.exports = router;
 // Import Controller Handlers
 const { getUsers, updateUser, deleteUser, getDashboard } = require('../controllers/adminController');
 
@@ -13,7 +17,7 @@ if (typeof authorizeRoles !== 'function') {
 }
 
 // Apply authentication and role authorization to all admin endpoints
-router.use(verifyToken);
+router.use(authenticateUser);
 router.use(authorizeRoles('admin'));
 
 // Admin Endpoints
