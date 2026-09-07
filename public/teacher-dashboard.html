@@ -530,7 +530,7 @@ const filePath = `${Date.now()}_${safeFileName}`;
   // Required headers
   xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
   xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-  xhr.setRequestHeader("x-upsert", "true"); // Allows overwriting if necessary
+  xhr.setRequestHeader("x-upsert", "false"); // Allows overwriting if necessary
   
   // Safe Content-Type fallback
   const mimeType = file.type && file.type.trim() !== "" ? file.type : "application/octet-stream";
