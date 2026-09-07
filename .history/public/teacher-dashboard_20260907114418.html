@@ -502,7 +502,7 @@
     }
 
     // Upload Material / Assignment with Progress Tracker
- async function handleUploadMaterial(e) {
+   async function handleUploadMaterial(e) {
   e.preventDefault();
 
   const fileInput = document.getElementById("matFileInput");
@@ -515,57 +515,36 @@
   const fileExt = file.name.split('.').pop();
   const filePath = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
 
-  const SUPABASE_URL = "https://stlgpydccimcyvfnwqkh.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bGdweWRjY2ltY3l2Zm53cWtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MzI5NDUsImV4cCI6MjEwMzEwODk0NX0.NBPzbxNl4m-AU4Z5MimxeuGLk00pwJh0X5vFGc-xs1g";
-
   try {
-    showProgress("Uploading file to cloud storage...");
+    showProgress("Uploading file to storage...");
 
-    // STEP 1: Stream File directly to Supabase Storage via XMLHttpRequest (Tracks 0% -> 90%)
-    await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/materials/${filePath}`);
+    // 1. Upload file directly to Supabase Storage Bucket
+    const SUPABASE_URL = "https://stlgpydccimcyvfnwqkh.supabase.co"; // Replace with your Supabase URL
+    const SUPABASE_ANON_KEY = "your-supabase-anon-key"; // Replace with your ANON key
 
-      // Set mandatory headers for Supabase Storage REST endpoint
-      xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
-      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-      xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    const formData = new FormData();
+    formData.append('file', file);
 
-      // Listen to real-time binary byte transfer progress
-      xhr.upload.onprogress = (evt) => {
-        if (evt.lengthComputable) {
-          // Scale progress bar from 0% up to 90% during actual file upload
-          const percent = Math.round((evt.loaded / evt.total) * 90);
-          updateProgress(percent);
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve();
-        } else {
-          try {
-            const errData = JSON.parse(xhr.responseText);
-            reject(new Error(errData.message || "Failed to upload file to cloud storage."));
-          } catch {
-            reject(new Error("Failed to upload file to cloud storage."));
-          }
-        }
-      };
-
-      xhr.onerror = () => reject(new Error("Network error during file upload to storage."));
-      
-      // Send raw binary file stream
-      xhr.send(file);
+    const storageRes = await fetch(`${SUPABASE_URL}/storage/v1/object/materials/${filePath}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${token}`
+      },
+      body: file
     });
 
-    // STEP 2: Construct Public Access URL
+    if (!storageRes.ok) {
+      const errData = await storageRes.json();
+      throw new Error(errData.message || 'Failed to upload file to storage.');
+    }
+
+    // Generate public file URL
     const publicFileUrl = `${SUPABASE_URL}/storage/v1/object/public/materials/${filePath}`;
 
     showProgress("Saving document details...");
-    updateProgress(95);
 
-    // STEP 3: Post Metadata Payload to Express API (Tracks 95% -> 100%)
+    // 2. Send file URL to backend
     const payload = {
       title: document.getElementById("matTitle").value,
       subject: document.getElementById("matSubject").value,
@@ -574,33 +553,50 @@
       description: document.getElementById("matDesc").value,
       due_date: document.getElementById("matDueDate").value,
       file_name: file.name,
-      file_data: publicFileUrl
+      file_data: publicFileUrl // Pass public URL instead of Base64
     };
 
-    const res = await fetch(`${API_BASE}/materials/upload`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", `${API_BASE}/materials/upload`);
+          xhr.setRequestHeader("Content-Type", "application/json");
+          xhr.setRequestHeader("Authorization", `Bearer ${token}`);
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to save document details.");
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              const uploadPercent = 50 + Math.round((evt.loaded / evt.total) * 50);
+              updateProgress(uploadPercent);
+            }
+          };
 
-    updateProgress(100);
-    setTimeout(() => {
-      hideProgress();
-      alert("Class document published successfully!");
-      document.getElementById("materialForm").reset();
-    }, 300);
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              try {
+                reject(new Error(JSON.parse(xhr.responseText).error || "Upload failed."));
+              } catch {
+                reject(new Error("Upload failed."));
+              }
+            }
+          };
 
-  } catch (err) {
-    hideProgress();
-    alert(err.message);
-  }
-}
+          xhr.onerror = () => reject(new Error("Network error during document upload."));
+          xhr.send(JSON.stringify(payload));
+        });
+
+        updateProgress(100);
+        setTimeout(() => {
+          hideProgress();
+          alert("Class document published successfully!");
+          document.getElementById("materialForm").reset();
+        }, 300);
+
+      } catch (err) {
+        hideProgress();
+        alert(err.message);
+      }
+    }
 
     function logout() {
       localStorage.clear();
