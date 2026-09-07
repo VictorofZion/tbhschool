@@ -348,20 +348,17 @@
     hideProgress();
     const config = data.paymentConfig;
 
-    // Pass publicKey and key explicitly to satisfy Remita SDK specifications
+    // Correct top-level parameter structure required by Remita Inline SDK
     const paymentEngine = window.RmPaymentEngine.init({
-      key: config.publicKey,
-      publicKey: config.publicKey,
+      key: config.publicKey || config.merchantId,
       merchantId: config.merchantId,
+      serviceTypeId: config.serviceTypeId, // Must be top-level, not in extendedData
       transactionId: config.orderId,
-      customerId: user.email,
-      firstName: user.full_name,
-      email: user.email,
       amount: config.amount,
-      narration: "Tetotim Blessed Hope School Term Fee",
-      extendedData: {
-        customFields: [{ name: "serviceTypeId", value: config.serviceTypeId }]
-      },
+      payerName: user.full_name,
+      payerEmail: user.email,
+      payerPhone: "08000000000",
+      description: "Tetotim Blessed Hope School Term Fee",
       onSuccess: async function (response) {
         showProgress("Verifying Payment...");
         const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
@@ -387,7 +384,7 @@
           alert(`Verification Error: ${verifyData.error}`);
         }
       },
-      onError: function () {
+      onError: function (err) {
         hideProgress();
         alert("Payment failed or was cancelled.");
       },
