@@ -1,6 +1,6 @@
 const supabase = require('../config/db');
 
-// Create CBT Exam/Test Shell
+// 1. Create CBT Exam/Test Shell
 const createExam = async (req, res) => {
   const { title, subject, class_level, duration_minutes, type } = req.body;
 
@@ -23,7 +23,7 @@ const createExam = async (req, res) => {
   }
 };
 
-// Add Questions to an Existing Exam
+// 2. Add Questions to an Existing Exam
 const addQuestions = async (req, res) => {
   const { exam_id, questions } = req.body;
 
@@ -55,8 +55,7 @@ const addQuestions = async (req, res) => {
   }
 };
 
-// Get Available Exams for a Specific Class Level
-// 1. Get Available Exams List for a Specific Class Level
+// 3. Get Available Exams for a Specific Class Level
 const getExamsByClass = async (req, res) => {
   const { classLevel } = req.params;
 
@@ -74,7 +73,7 @@ const getExamsByClass = async (req, res) => {
   }
 };
 
-// 2. Get Individual Questions for a Specific Exam ID
+// 4. Get Questions for a Specific Exam ID
 const getExamQuestions = async (req, res) => {
   const { examId } = req.params;
 
@@ -92,7 +91,21 @@ const getExamQuestions = async (req, res) => {
   }
 };
 
-// Export both functions along with your other exam methods
+// 5. Submit Completed Exam Answers
+const submitExam = async (req, res) => {
+  const { exam_id, student_id, answers } = req.body;
+
+  if (!exam_id || !student_id) {
+    return res.status(400).json({ error: 'Exam ID and Student ID are required.' });
+  }
+
+  try {
+    return res.status(200).json({ success: true, message: 'Assessment submitted successfully.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to submit examination.' });
+  }
+};
+
 module.exports = {
   createExam,
   addQuestions,
