@@ -566,16 +566,20 @@ const filePath = `${Date.now()}_${safeFileName}`;
     updateProgress(95);
 
     // STEP 3: Post Metadata Payload to Express API (Tracks 95% -> 100%)
-    const payload = {
-      title: document.getElementById("matTitle").value,
-      subject: document.getElementById("matSubject").value,
-      class_level: document.getElementById("matClass").value,
-      material_type: document.getElementById("matType").value,
-      description: document.getElementById("matDesc").value,
-      due_date: document.getElementById("matDueDate").value,
-      file_name: file.name,
-      file_data: publicFileUrl
-    };
+    // Sanitize due_date before constructing payload
+const rawDueDate = document.getElementById("matDueDate").value;
+const cleanDueDate = (rawDueDate && rawDueDate.trim() !== "") ? rawDueDate : null;
+
+const payload = {
+  title: document.getElementById("matTitle").value,
+  subject: document.getElementById("matSubject").value,
+  class_level: document.getElementById("matClass").value,
+  material_type: document.getElementById("matType").value,
+  description: document.getElementById("matDesc").value,
+  due_date: cleanDueDate,
+  file_name: file.name,
+  file_data: publicFileUrl
+};
 
     const res = await fetch(`${API_BASE}/materials/upload`, {
       method: "POST",

@@ -8,8 +8,8 @@ const uploadMaterial = async (req, res) => {
     return res.status(400).json({ error: 'Title, subject, class level, and file attachment are required.' });
   }
 
-  // Convert empty string due_date to null for PostgreSQL timestamp compatibility
-  const formattedDueDate = (due_date && String(due_date).trim() !== '') ? due_date : null;
+  // Convert empty string or whitespace due_date to null
+  const cleanDueDate = (due_date && String(due_date).trim() !== '') ? due_date : null;
 
   try {
     const { data: material, error } = await supabase
@@ -20,7 +20,7 @@ const uploadMaterial = async (req, res) => {
         class_level,
         material_type: material_type || 'note',
         description,
-        due_date: formattedDueDate,
+        due_date: cleanDueDate,
         file_name,
         file_data
       }])
