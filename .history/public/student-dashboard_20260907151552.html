@@ -7,8 +7,6 @@
   <link rel="stylesheet" href="global.css" />
  <script src="https://remitademo.net/payment/v1/remita-pay-inline.bundle.js"></script>
  
-
- 
   <style>
     :root {
       --primary-navy: #0a1931;
@@ -320,87 +318,38 @@
     }
 
     async function paySchoolFees() {
-    if (typeof window.RmPaymentEngine === "undefined") {
-      alert("Remita SDK not loaded. Check your internet connection or script URL.");
-      return;
-    }
+      try {
+        const res = await fetch(`${API_BASE}/payments/initiate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ student_id: studentProfile.id, amount: 150000, payer_name: user.full_name, payer_email: user.email })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
 
-    try {
-      showProgress("Initiating Payment Gateway...");
-
-      const res = await fetch(`${API_BASE}/payments/initiate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          student_id: studentProfile.id,
-          amount: 150000,
-          payer_name: user.full_name,
-          payer_email: user.email
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
-      hideProgress();
-      const config = data.paymentConfig;
-
-      // Correct SDK initialization call
-      const paymentEngine = window.RmPaymentEngine.init({
-        key: config.merchantId,
-        transactionId: config.orderId,
-        customerId: user.email,
-        firstName: user.full_name,
-        email: user.email,
-        amount: config.amount,
-        narration: "Tetotim Blessed Hope School Term Fee",
-        extendedData: {
-          customFields: [{ name: "serviceTypeId", value: config.serviceTypeId }]
-        },
-        onSuccess: async function (response) {
-          showProgress("Verifying Payment...");
-          const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              rrr: response.RRR || response.rrr || response.paymentReference,
-              orderId: config.orderId,
-              studentId: studentProfile.id
-            })
-          });
-
-          const verifyData = await verifyRes.json();
-          hideProgress();
-
-          if (verifyRes.ok) {
-            alert("Payment Successful! Your school fee status has been updated.");
+        const config = data.paymentConfig;
+        var paymentEngine = RmPaymentEngine.initiatePayment({
+          key: config.merchantId,
+          transactionId: config.orderId,
+          customerId: user.email,
+          firstName: user.full_name,
+          email: user.email,
+          amount: config.amount,
+          narration: "TBHS School Fee Payment",
+          onSuccess: async function (response) {
+            await fetch(`${API_BASE}/payments/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+              body: JSON.stringify({ rrr: response.RRR, orderId: config.orderId, studentId: studentProfile.id })
+            });
+            alert("Payment Verified!");
             location.reload();
-          } else {
-            alert(`Verification Error: ${verifyData.error}`);
-          }
-        },
-        onError: function () {
-          hideProgress();
-          alert("Payment failed or was cancelled.");
-        },
-        onClose: function () {
-          hideProgress();
-        }
-      });
-
-      paymentEngine.showPaymentWidget();
-
-    } catch (err) {
-      hideProgress();
-      alert(err.message);
+          },
+          onError: function () { alert("Payment Cancelled."); }
+        });
+        paymentEngine.showPaymentWidget();
+      } catch (err) { alert(err.message); }
     }
-  }
 
     function showProgress(title) {
       document.getElementById("progressTitle").innerText = title;
