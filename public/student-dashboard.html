@@ -5,7 +5,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Student Portal - Tetotim Blessed Hope School</title>
   <link rel="stylesheet" href="global.css" />
-  <script src="https://remitademo.net/payment/v1/remita-pay-inline.bundle.js"></script>
+  <!-- Add Remita Inline SDK in <head> -->
+<script src="https://remitademo.net/payment/v1/remita-pay-inline.bundle.js"></script>
+
+<!-- Payment Button Action Script -->
+<script>
+async function paySchoolFees() {
+  const user = JSON.parse(localStorage.getItem('tbhs_user'));
+  const token = localStorage.getItem('tbhs_token');
+
+  if (!user || !user.student_id) {
+    alert("Student session not found. Please log in again.");
+    return;
+  }
+
+  try {
+    // 1. Fetch payment parameters from backend
+    const response = await fetch('/api/payment/initiate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        student_id: user.student_id,
+        amount: 25000, // Replace with your standard fee amount
+        payer_name: user.full_name,
+        payer_email: user.email
+      })
+    });
+
+    const resData = await response.json();
+    if (!response.ok) throw new Error(resData.error || 'Failed to initiate payment.');
+
+    const config = resData.paymentConfig;
+
+    // 2. Initialize Remita Inline Payment Modal
+    const paymentEngine = RmPaymentEngine.init({
+      key: config.merchantId,
+      processRrr: false,
+      transactionId: config.orderId,
+      extendedData: {
+        customFields: [{ name: "serviceTypeId", value: config.serviceTypeId }]
+      },
+      amount: config.amount,
+      firstName: config.payerName,
+      email: config.payerEmail,
+      narration: "School Fees Payment",
+      onSuccess: async function (response) {
+        console.log('Remita Response:', response);
+        // 3. Verify transaction on backend upon completion
+        const verifyRes = await fetch('/api/payment/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            rrr: response.rrr || response.paymentReference,
+            orderId: config.orderId,
+            studentId: user.student_id
+          })
+        });
+
+        const verifyData = await verifyRes.json();
+        if (verifyRes.ok) {
+          alert("Payment Successful! Your fee status has been updated.");
+          user.fee_status = 'PAID';
+          localStorage.setItem('tbhs_user', JSON.stringify(user));
+          location.reload();
+        } else {
+          alert("Payment succeeded on Remita but verification failed: " + verifyData.error);
+        }
+      },
+      onError: function (response) {
+        alert("Payment Error: " + response.message);
+      },
+      onClose: function () {
+        console.log('Payment modal closed');
+      }
+    });
+
+    paymentEngine.showPaymentWidget();
+
+  } catch (err) {
+    alert(err.message);
+  }
+}
+</script>
+
   <style>
     :root {
       --primary-navy: #0a1931;
@@ -267,31 +355,21 @@
 
   <script>
     const API_BASE = "/api";
-    const token = localStorage.getItem("tbhs_token");
-    const user = JSON.parse(localStorage.getItem("tbhs_user") || "{}");
+    document.addEventListener('DOMContentLoaded', () => {
+  const userData = JSON.parse(localStorage.getItem('tbhs_user'));
 
-    if (!token || user.role !== "student") {
-      window.location.href = "login.html";
-    }
+  if (!userData) {
+    window.location.href = 'login.html';
+    return;
+  }
 
-    document.getElementById("welcomeHeading").innerText = `Welcome, ${user.full_name}`;
-    if (user.avatar_url) document.getElementById("studentAvatar").src = user.avatar_url;
-
-    const studentProfile = user.studentProfile || {};
-    if (studentProfile.serial_number) {
-      document.getElementById("serialNumberBadge").innerText = `Serial No: ${studentProfile.serial_number}`;
-    }
-    document.getElementById("studentInfo").innerText = `Reg No: ${studentProfile.reg_number || 'N/A'} | Class: ${studentProfile.class_level || 'N/A'}`;
-
-    const paymentContainer = document.getElementById("paymentAction");
-    if (studentProfile.fee_status === "PAID") {
-      paymentContainer.innerHTML = `<span class="badge badge-paid">FEE PAID</span>`;
-    } else {
-      paymentContainer.innerHTML = `
-        <span class="badge badge-unpaid" style="margin-right: 12px;">${studentProfile.fee_status || 'UNPAID'}</span>
-        <button class="pay-btn" onclick="paySchoolFees()">Pay Tuition via Remita</button>
-      `;
-    }
+  // Populate Dashboard UI Elements
+  document.getElementById('userName').textContent = userData.full_name || 'Student';
+  document.getElementById('regNumber').textContent = userData.reg_number || 'N/A';
+  document.getElementById('classLevel').textContent = userData.class_level || 'N/A';
+  document.getElementById('feeStatus').textContent = userData.fee_status || 'UNPAID';
+});
+    
 
     function switchTab(tabId, evt) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));

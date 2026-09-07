@@ -2,7 +2,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/db');
 
-// User Login Handler
+// Helper function to auto-generate a unique Registration Number
+const generateRegNumber = () => {
+  const year = new Date().getFullYear();
+  const randomDigits = Math.floor(1000 + Math.random() * 9000);
+  return `TBH/${year}/${randomDigits}`;
+};
+
+// 1. Login Handler with Supabase Relation Join
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -11,7 +18,7 @@ const login = async (req, res) => {
   }
 
   try {
-    // Join the users table with the students table
+    // Fetch user and join with students table via user_id foreign key
     const { data: user, error } = await supabase
       .from('users')
       .select('*, students(*)')
@@ -20,10 +27,6 @@ const login = async (req, res) => {
 
     if (error || !user) {
       return res.status(400).json({ error: 'Invalid email or password.' });
-    }
-
-    if (!user.password) {
-      return res.status(400).json({ error: 'Invalid user account state. Please contact admin.' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
@@ -37,7 +40,7 @@ const login = async (req, res) => {
       { expiresIn: '8h' }
     );
 
-    // Extract nested student details if available
+    // Normalize student record data
     const studentInfo = Array.isArray(user.students) ? user.students[0] : user.students;
 
     return res.status(200).json({
@@ -57,21 +60,23 @@ const login = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("Authentication Error Details:", err);
+    console.error("Login Error:", err);
     return res.status(500).json({ error: 'Internal server error during authentication.' });
   }
 };
-const createUser = async (req, res) => {
-  const { full_name, email, password, role, avatar_url, reg_number, serial_number, class_level } = req.body;
 
-  if (!email || !password || !full_name || !role) {
+// 2. Create User Handler (Auto Reg Number & Supabase Persistence)
+const createUser = async (req, res) => {
+  const { full_name, email, password, role, avatar_url, reg_number, class_level } = req.body;
+
+  if (!full_name || !email || !password || !role) {
     return res.status(400).json({ error: 'Full name, email, password, and role are required.' });
   }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 1. Create User Record
+    // Insert into 'users' table
     const { data: user, error: userError } = await supabase
       .from('users')
       .insert([{ full_name, email, password: hashedPassword, role, avatar_url }])
@@ -85,36 +90,25 @@ const createUser = async (req, res) => {
       return res.status(400).json({ error: userError.message });
     }
 
-    // 2. If Role is Student, Create Student Record
+    // Insert into 'students' table if role is 'student'
     if (role === 'student') {
-      // Generate fallback unique values if input fields were left empty
-      const finalRegNum = reg_number && reg_number.trim() !== '' 
-        ? reg_number.trim() 
-        : `REG-${Date.now().toString().slice(-6)}`;
-
-      const finalSerialNum = serial_number && serial_number.trim() !== '' 
-        ? serial_number.trim() 
-        : `SN-${Math.floor(100000 + Math.random() * 900000)}`;
+      const finalRegNum = reg_number && reg_number.trim() !== '' ? reg_number.trim() : generateRegNumber();
+      const finalSerialNum = `SN-${Math.floor(100000 + Math.random() * 900000)}`;
 
       const { error: studentError } = await supabase
         .from('students')
-        .insert([{ 
-          user_id: user.id, 
-          reg_number: finalRegNum, 
-          serial_number: finalSerialNum, 
-          class_level: class_level || 'JSS 1' 
+        .insert([{
+          user_id: user.id,
+          reg_number: finalRegNum,
+          serial_number: finalSerialNum,
+          class_level: class_level || 'JSS 1',
+          fee_status: 'UNPAID'
         }]);
 
       if (studentError) {
-        // Rollback: delete orphaned user row if student creation fails
+        // Rollback user creation if student entry fails
         await supabase.from('users').delete().eq('id', user.id);
-
-        if (studentError.code === '23505') {
-          return res.status(400).json({ 
-            error: 'Student creation failed: Registration number or Serial number already exists in database.' 
-          });
-        }
-        return res.status(400).json({ error: `Student profile error: ${studentError.message}` });
+        return res.status(400).json({ error: `Failed to create student profile: ${studentError.message}` });
       }
     }
 
@@ -124,7 +118,5 @@ const createUser = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
-module.exports = {
-  login,
-  createUser
-};
+
+module.exports = { login, createUser };
