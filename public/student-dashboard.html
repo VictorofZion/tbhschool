@@ -348,17 +348,18 @@
     hideProgress();
     const config = data.paymentConfig;
 
-    // Correct top-level parameter structure required by Remita Inline SDK
+    // Configuration object with explicit narration field
     const paymentEngine = window.RmPaymentEngine.init({
       key: config.publicKey || config.merchantId,
       merchantId: config.merchantId,
-      serviceTypeId: config.serviceTypeId, // Must be top-level, not in extendedData
+      serviceTypeId: config.serviceTypeId,
       transactionId: config.orderId,
       amount: config.amount,
+      narration: "Tetotim Blessed Hope School Term Fee", // Mandatory for Remita SDK
+      description: "Tetotim Blessed Hope School Term Fee",
       payerName: user.full_name,
       payerEmail: user.email,
       payerPhone: "08000000000",
-      description: "Tetotim Blessed Hope School Term Fee",
       onSuccess: async function (response) {
         showProgress("Verifying Payment...");
         const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
