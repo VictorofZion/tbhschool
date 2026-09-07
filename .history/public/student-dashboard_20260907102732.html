@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Student Portal - Tetotim Blessed Hope School</title>
   <link rel="stylesheet" href="global.css" />
-  <script src="https://remitademo.net/payment/v1/remita-pay-inline.bundle.js"></script>
-  <script>
+  <!-- Add Remita Inline SDK in <head> -->
+<script src="https://remitademo.net/payment/v1/remita-pay-inline.bundle.js"></script>
+
+<!-- Payment Button Action Script -->
+<script>
 async function paySchoolFees() {
   const user = JSON.parse(localStorage.getItem('tbhs_user'));
   const token = localStorage.getItem('tbhs_token');
@@ -107,6 +110,7 @@ async function paySchoolFees() {
       display: flex;
       min-height: 100vh;
     }
+    
     .sidebar {
       width: 260px;
       background-color: var(--primary-navy);
@@ -119,6 +123,7 @@ async function paySchoolFees() {
     .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
     .brand img { width: 36px; height: auto; }
     .brand h2 { font-family: 'Geist-Bold', sans-serif; font-size: 16px; margin: 0; }
+    
     .nav-links { display: flex; flex-direction: column; gap: 8px; }
     .nav-btn {
       background: transparent;
@@ -131,12 +136,28 @@ async function paySchoolFees() {
       cursor: pointer;
       transition: all 0.2s;
     }
-    .nav-btn.active, .nav-btn:hover { background-color: var(--accent-coral); color: #ffffff; }
+    .nav-btn.active, .nav-btn:hover {
+      background-color: var(--accent-coral);
+      color: #ffffff;
+    }
+
     .main-content { flex: 1; padding: 40px; overflow-y: auto; }
-    .header-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
-    .student-avatar { width: 68px; height: 68px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-coral); }
+    .header-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .student-avatar {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--accent-coral);
+    }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+    
     .status-card {
       background: #ffffff;
       padding: 24px;
@@ -147,21 +168,95 @@ async function paySchoolFees() {
       align-items: center;
       margin-bottom: 32px;
     }
-    .badge { padding: 6px 12px; border-radius: 100px; font-weight: 700; font-size: 12px; }
+    .badge {
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-weight: 700;
+      font-size: 12px;
+    }
     .badge-paid { background: #d4edda; color: #155724; }
     .badge-unpaid { background: #f8d7da; color: #721c24; }
-    .pay-btn { background-color: var(--accent-coral); color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-    .card { background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; }
+    
+    .pay-btn {
+      background-color: var(--accent-coral);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .card {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+    
     table { width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 8px; overflow: hidden; }
     th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
     th { background-color: #0a1931; color: #ffffff; }
-    .btn-action { background-color: var(--accent-coral); color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; display: inline-block; cursor: pointer; border: none; }
-    .logout-btn { background-color: rgba(255,255,255,0.1); color: #ffffff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; }
-    .progress-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 25, 49, 0.85); z-index: 2000; justify-content: center; align-items: center; }
-    .progress-modal-card { background: #ffffff; padding: 32px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; }
-    .progress-track { width: 100%; height: 12px; background: #e4dfd5; border-radius: 6px; overflow: hidden; margin: 16px 0 8px 0; }
-    .progress-fill { width: 0%; height: 100%; background: var(--accent-coral); transition: width 0.2s ease; }
-    .progress-percent-text { font-family: 'Geist-Bold', sans-serif; font-size: 14px; color: var(--primary-navy); }
+    
+    .btn-action {
+      background-color: var(--accent-coral);
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      display: inline-block;
+    }
+
+    .logout-btn {
+      background-color: rgba(255,255,255,0.1);
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* Progress Loader Modal */
+    .progress-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10, 25, 49, 0.85);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+    .progress-modal-card {
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      background: #e4dfd5;
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 16px 0 8px 0;
+    }
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--accent-coral, #e25b38);
+      transition: width 0.2s ease;
+    }
+    .progress-percent-text {
+      font-family: 'Geist-Bold', sans-serif;
+      font-size: 14px;
+      color: var(--primary-navy, #0a1931);
+    }
   </style>
 </head>
 <body>
@@ -260,33 +355,21 @@ async function paySchoolFees() {
 
   <script>
     const API_BASE = "/api";
-    const token = localStorage.getItem("tbhs_token");
-    const user = JSON.parse(localStorage.getItem("tbhs_user") || "{}");
-    const studentProfile = {
-      id: user.student_id || user.id,
-      class_level: user.class_level || 'JSS 1',
-      reg_number: user.reg_number || 'N/A',
-      serial_number: user.serial_number || 'N/A',
-      fee_status: user.fee_status || 'UNPAID'
-    };
-
-    if (!token || user.role !== "student") {
-      window.location.href = "login.html";
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('welcomeHeading').innerText = `Welcome, ${user.full_name || 'Student'}`;
-      document.getElementById('serialNumberBadge').innerText = `Reg: ${studentProfile.reg_number} | Class: ${studentProfile.class_level}`;
-      if (user.avatar_url) document.getElementById('studentAvatar').src = user.avatar_url;
+  const userData = JSON.parse(localStorage.getItem('tbhs_user'));
 
-      const isPaid = studentProfile.fee_status === 'PAID';
-      document.getElementById('studentInfo').innerHTML = `Status: <span class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}">${studentProfile.fee_status}</span>`;
-      document.getElementById('paymentAction').innerHTML = isPaid 
-        ? `<span class="badge badge-paid">Fees Fully Settled</span>`
-        : `<button onclick="paySchoolFees()" class="pay-btn">Pay School Fees (Remita)</button>`;
+  if (!userData) {
+    window.location.href = 'login.html';
+    return;
+  }
 
-      loadResults();
-    });
+  // Populate Dashboard UI Elements
+  document.getElementById('userName').textContent = userData.full_name || 'Student';
+  document.getElementById('regNumber').textContent = userData.reg_number || 'N/A';
+  document.getElementById('classLevel').textContent = userData.class_level || 'N/A';
+  document.getElementById('feeStatus').textContent = userData.fee_status || 'UNPAID';
+});
+    
 
     function switchTab(tabId, evt) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
@@ -346,13 +429,17 @@ async function paySchoolFees() {
               ? `<span style="background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">TEST (40M)</span>`
               : `<span style="background: #fbe9e7; color: #d84315; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">EXAM (60M)</span>`;
 
+            const actionBtn = e.is_completed
+              ? `<span style="background: #e8f5e9; color: #2e7d32; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 13px;">COMPLETED</span>`
+              : `<a href="exam.html?examId=${e.id}&duration=${e.duration_minutes}" class="btn-action">Start Assessment</a>`;
+
             tbody.innerHTML += `
               <tr>
                 <td><strong>${e.title}</strong> ${typeBadge}</td>
                 <td>${e.subject}</td>
                 <td>${e.class_level}</td>
                 <td>${e.duration_minutes} Mins</td>
-                <td><a href="exam.html?examId=${e.id}&duration=${e.duration_minutes}" class="btn-action">Start Assessment</a></td>
+                <td>${actionBtn}</td>
               </tr>
             `;
           });
@@ -370,7 +457,9 @@ async function paySchoolFees() {
       const url = `${API_BASE}/materials/class/${studentProfile.class_level}${filterType ? '?type=' + filterType : ''}`;
 
       try {
-        const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+        const res = await fetch(url, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
         const data = await res.json();
         const wrapper = document.getElementById("assignmentsWrapper");
         wrapper.innerHTML = "";
@@ -382,10 +471,13 @@ async function paySchoolFees() {
               ? `<span style="background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">CLASS NOTE</span>`
               : `<span style="background: #fff3e0; color: #e65100; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">ASSIGNMENT</span>`;
 
+            const dueDateText = m.due_date ? `<strong>DUE:</strong> ${new Date(m.due_date).toLocaleDateString()}` : `<strong>UPLOADED:</strong> ${new Date(m.created_at).toLocaleDateString()}`;
+
             wrapper.innerHTML += `
               <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                   <h3 style="margin: 0; color: var(--primary-navy);">${m.title} ${typeBadge}</h3>
+                  <span style="font-size: 12px; color: var(--accent-coral);">${dueDateText}</span>
                 </div>
                 <p style="margin: 0 0 12px 0; font-size: 13px; color: #6e7787;"><strong>Subject:</strong> ${m.subject} | <strong>Class:</strong> ${m.class_level}</p>
                 <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.5;">${m.description || 'No additional notes provided.'}</p>
@@ -394,7 +486,7 @@ async function paySchoolFees() {
             `;
           });
         } else {
-          wrapper.innerHTML = `<p style="text-align: center; color: #6e7787;">No learning materials found.</p>`;
+          wrapper.innerHTML = `<p style="text-align: center; color: #6e7787;">No learning materials or assignments found for your class level.</p>`;
         }
       } catch (err) {
         console.error("Failed to load materials", err);
@@ -405,36 +497,61 @@ async function paySchoolFees() {
       try {
         const res = await fetch(`${API_BASE}/payments/initiate`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ student_id: studentProfile.id, amount: 150000, payer_name: user.full_name, payer_email: user.email })
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            student_id: studentProfile.id,
+            amount: 150000,
+            payer_name: user.full_name,
+            payer_email: user.email,
+            payer_phone: "08000000000"
+          })
         });
+
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
         const config = data.paymentConfig;
+
         var paymentEngine = RmPaymentEngine.initiatePayment({
           key: config.merchantId,
           transactionId: config.orderId,
           customerId: user.email,
           firstName: user.full_name,
+          lastName: "Student",
           email: user.email,
           amount: config.amount,
           narration: "TBHS School Fee Payment",
           onSuccess: async function (response) {
             await fetch(`${API_BASE}/payments/verify`, {
               method: "POST",
-              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-              body: JSON.stringify({ rrr: response.RRR, orderId: config.orderId, studentId: studentProfile.id })
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                rrr: response.RRR,
+                orderId: config.orderId,
+                studentId: studentProfile.id
+              })
             });
-            alert("Payment Verified!");
+            alert("Payment Verified! Reloading...");
             location.reload();
           },
-          onError: function () { alert("Payment Cancelled."); }
+          onError: function () {
+            alert("Payment Cancelled.");
+          }
         });
         paymentEngine.showPaymentWidget();
-      } catch (err) { alert(err.message); }
+
+      } catch (err) {
+        alert(err.message);
+      }
     }
 
+    // Progress Helper Functions
     function showProgress(title) {
       document.getElementById("progressTitle").innerText = title;
       document.getElementById("progressBar").style.width = "0%";
@@ -448,21 +565,51 @@ async function paySchoolFees() {
       document.getElementById("progressPercent").innerText = `${bounded}%`;
     }
 
-    function hideProgress() { document.getElementById("progressModal").style.display = "none"; }
+    function hideProgress() {
+      document.getElementById("progressModal").style.display = "none";
+    }
 
+    // Download Stream Processor with Progress Bar
     async function downloadFileWithProgress(fileDataUrl, fileName) {
       try {
         showProgress(`Downloading ${fileName}...`);
+
         const response = await fetch(fileDataUrl);
-        const blob = await response.blob();
+        const contentLength = response.headers.get('content-length');
+        const totalBytes = contentLength ? parseInt(contentLength, 10) : 0;
+
+        const reader = response.body.getReader();
+        let loadedBytes = 0;
+        const chunks = [];
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          chunks.push(value);
+          loadedBytes += value.length;
+
+          if (totalBytes > 0) {
+            const percent = Math.round((loadedBytes / totalBytes) * 100);
+            updateProgress(percent);
+          } else {
+            const simulated = Math.min(95, Math.round(loadedBytes / 1024));
+            updateProgress(simulated);
+          }
+        }
+
         updateProgress(100);
 
+        const blob = new Blob(chunks);
+        const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
+        link.href = blobUrl;
         link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+
         setTimeout(hideProgress, 400);
       } catch (err) {
         hideProgress();
@@ -474,6 +621,8 @@ async function paySchoolFees() {
       localStorage.clear();
       window.location.href = "login.html";
     }
+
+    loadResults();
   </script>
 </body>
 </html>

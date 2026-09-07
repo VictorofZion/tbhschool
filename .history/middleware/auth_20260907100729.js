@@ -1,6 +1,6 @@
-const supabase = require('../config/db');
+const supabase = require('../config/supabase');
 
-// Verify Supabase authentication token
+// Middleware to verify Supabase authentication token
 const authenticateUser = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -20,13 +20,14 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
-// Restrict access based on user role
+// Middleware to restrict access based on user role
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
+    // Checks role stored in Supabase user_metadata or top-level role property
     const userRole = req.user.user_metadata?.role || req.user.role;
 
     if (!allowedRoles.includes(userRole)) {
@@ -37,9 +38,8 @@ const authorizeRoles = (...allowedRoles) => {
   };
 };
 
-// Export functions with verifyToken alias for backwards compatibility
+// Export both functions as an object
 module.exports = {
   authenticateUser,
-  verifyToken: authenticateUser,
   authorizeRoles
 };
