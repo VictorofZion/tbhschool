@@ -8,16 +8,10 @@
  <script src="https://remitademo.net/payment/v1/remita-pay-inline.bundle.js"></script>
   <script>
 async function paySchoolFees() {
-  // 1. Verify Remita SDK availability on window
-  if (typeof window.RmPaymentEngine === "undefined") {
-    alert("Remita payment SDK failed to load. Please refresh the page and try again.");
-    return;
-  }
-
   try {
     showProgress("Initiating Payment Gateway...");
 
-    // 2. Fetch payment transaction hash from Express backend
+    // 1. Fetch payment config from backend
     const res = await fetch(`${API_BASE}/payments/initiate`, {
       method: "POST",
       headers: {
@@ -38,8 +32,8 @@ async function paySchoolFees() {
     hideProgress();
     const config = data.paymentConfig;
 
-    // 3. Initialize Engine using RmPaymentEngine.init()
-    const paymentEngine = window.RmPaymentEngine.init({
+    // 2. Initialize Remita Payment Engine
+    const paymentEngine = RmPaymentEngine.init({
       key: config.merchantId,
       transactionId: config.orderId,
       customerId: user.email,
@@ -56,7 +50,7 @@ async function paySchoolFees() {
         ]
       },
       onSuccess: async function (response) {
-        showProgress("Verifying Payment...");
+        showProgress("Verifying Payment with Server...");
 
         const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
           method: "POST",
@@ -90,15 +84,14 @@ async function paySchoolFees() {
       }
     });
 
-    // 4. Open Inline Payment Modal
+    // 3. Display Modal Widget
     paymentEngine.showPaymentWidget();
 
   } catch (err) {
     hideProgress();
     alert(err.message);
   }
-}
-</script>
+}</script>
 
   <style>
     :root {
