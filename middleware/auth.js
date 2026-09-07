@@ -1,7 +1,6 @@
-const supabase = require('../config/db');
+const jwt = require('jsonwebtoken');
 
-// Verify Supabase authentication token
-const authenticateUser = async (req, res, next) => {
+const authenticateUser = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Access token missing' });
@@ -9,26 +8,24 @@ const authenticateUser = async (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
-    }
-    req.user = user;
+    const decoded = jwt.verify(
+      token, 
+      process.env.JWT_SECRET || 'tbhs_super_secret_jwt_key_2026'
+    );
+    req.user = decoded;
     next();
   } catch (err) {
-    return res.status(500).json({ error: 'Authentication error' });
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 
-// Restrict access based on user role
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const userRole = req.user.user_metadata?.role || req.user.role;
-
+    const userRole = req.user.role;
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
     }
@@ -37,7 +34,6 @@ const authorizeRoles = (...allowedRoles) => {
   };
 };
 
-// Export functions with verifyToken alias for backwards compatibility
 module.exports = {
   authenticateUser,
   verifyToken: authenticateUser,

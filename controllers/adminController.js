@@ -1,6 +1,5 @@
 const supabase = require('../config/db');
 
-// Get Admin Dashboard Overview
 const getDashboard = async (req, res) => {
   try {
     const { count: totalUsers } = await supabase.from('users').select('*', { count: 'exact', head: true });
@@ -15,13 +14,19 @@ const getDashboard = async (req, res) => {
   }
 };
 
-// Fetch All Registered Users
 const getUsers = async (req, res) => {
-  try {
-    const { data: users, error } = await supabase
-      .from('users')
-      .select('id, full_name, email, role, created_at, students(*)');
+  const { role } = req.query;
 
+  try {
+    let query = supabase
+      .from('users')
+      .select('id, full_name, email, role, avatar_url, created_at, students(*)');
+
+    if (role) {
+      query = query.eq('role', role);
+    }
+
+    const { data: users, error } = await query;
     if (error) return res.status(400).json({ error: error.message });
 
     return res.status(200).json({ success: true, users });
@@ -30,7 +35,6 @@ const getUsers = async (req, res) => {
   }
 };
 
-// Update User & Associated Student Details
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const { full_name, email, role, class_level, reg_number, fee_status } = req.body;
@@ -60,7 +64,6 @@ const updateUser = async (req, res) => {
   }
 };
 
-// Delete User Account
 const deleteUser = async (req, res) => {
   const { id } = req.params;
 
