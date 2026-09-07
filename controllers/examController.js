@@ -11,7 +11,7 @@ const createExam = async (req, res) => {
   try {
     const { data: exam, error } = await supabase
       .from('exams')
-      .insert([{ title, subject, class_level, duration_minutes, type }])
+      .insert([{ title, subject, class_level, duration_minutes, type: type || 'test' }])
       .select()
       .single();
 
@@ -55,9 +55,10 @@ const addQuestions = async (req, res) => {
   }
 };
 
-// 3. Get Available Exams for a Specific Class Level
+// 3. Get Available Exams for a Specific Class Level with Attempt Status
 const getExamsByClass = async (req, res) => {
   const { classLevel } = req.params;
+  const studentId = req.user.student_id || req.user.id;
 
   try {
     const { data: exams, error } = await supabase
@@ -67,7 +68,20 @@ const getExamsByClass = async (req, res) => {
 
     if (error) return res.status(400).json({ error: error.message });
 
-    return res.status(200).json({ success: true, exams });
+    // Fetch existing submissions for this student
+    const { data: submissions } = await supabase
+      .from('exam_submissions')
+      .select('exam_id')
+      .eq('student_id', studentId);
+
+    const completedExamIds = new Set((submissions || []).map(s => s.exam_id));
+
+    const enrichedExams = exams.map(e => ({
+      ...e,
+      is_completed: completedExamIds.has(e.id)
+    }));
+
+    return res.status(200).json({ success: true, exams: enrichedExams });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to fetch class examinations.' });
   }
@@ -91,18 +105,92 @@ const getExamQuestions = async (req, res) => {
   }
 };
 
-// 5. Submit Completed Exam Answers
+// 5. Auto-Grade & Submit Exam (Enforces Single Attempt)
 const submitExam = async (req, res) => {
   const { exam_id, student_id, answers } = req.body;
 
-  if (!exam_id || !student_id) {
-    return res.status(400).json({ error: 'Exam ID and Student ID are required.' });
+  if (!exam_id || !student_id || !Array.isArray(answers)) {
+    return res.status(400).json({ error: 'Exam ID, Student ID, and answers array are required.' });
   }
 
   try {
-    return res.status(200).json({ success: true, message: 'Assessment submitted successfully.' });
+    // Check if student has already attempted this exam
+    const { data: existingSubmission } = await supabase
+      .from('exam_submissions')
+      .select('id')
+      .eq('exam_id', exam_id)
+      .eq('student_id', student_id)
+      .maybeSingle();
+
+    if (existingSubmission) {
+      return res.status(400).json({ error: 'You have already completed this assessment. Only one attempt is allowed.' });
+    }
+
+    // Fetch exam metadata
+    const { data: exam, error: examErr } = await supabase
+      .from('exams')
+      .select('*')
+      .eq('id', exam_id)
+      .single();
+
+    if (examErr || !exam) return res.status(404).json({ error: 'Exam configuration not found.' });
+
+    // Fetch correct question answers
+    const { data: questions, error: qErr } = await supabase
+      .from('questions')
+      .select('id, correct_option')
+      .eq('exam_id', exam_id);
+
+    if (qErr || !questions || questions.length === 0) {
+      return res.status(400).json({ error: 'No questions registered for this exam.' });
+    }
+
+    // Auto-grade calculation
+    let correctCount = 0;
+    const answerMap = new Map(answers.map(a => [String(a.question_id), String(a.selected_option).trim().toUpperCase()]));
+
+    questions.forEach(q => {
+      const selected = answerMap.get(String(q.id));
+      if (selected && selected === String(q.correct_option).trim().toUpperCase()) {
+        correctCount++;
+      }
+    });
+
+    const totalQuestions = questions.length;
+    const maxScore = exam.type === 'test' ? 40 : 60;
+    const finalScore = parseFloat(((correctCount / totalQuestions) * maxScore).toFixed(1));
+
+    // Record submission
+    const { error: subErr } = await supabase
+      .from('exam_submissions')
+      .insert([{
+        exam_id,
+        student_id,
+        score: finalScore,
+        total_questions: totalQuestions,
+        correct_count: correctCount
+      }]);
+
+    if (subErr) return res.status(400).json({ error: subErr.message });
+
+    // Auto-record grade in academic results
+    await supabase.from('results').insert([{
+      student_id,
+      subject: exam.subject,
+      test_score: exam.type === 'test' ? finalScore : 0,
+      exam_score: exam.type === 'exam' ? finalScore : 0,
+      term: '1st Term',
+      session: '2026/2027'
+    }]);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Assessment graded and recorded successfully.',
+      score: finalScore,
+      maxScore
+    });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to submit examination.' });
+    return res.status(500).json({ error: 'Failed to process assessment submission.' });
   }
 };
 
