@@ -512,9 +512,11 @@
   }
 
   const file = fileInput.files[0];
-  // Replace spaces and special characters with underscores to prevent 22023 parameter errors
-const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-const filePath = `${Date.now()}_${safeFileName}`;
+  
+  // Extract extension and aggressively sanitize filename to letters/numbers only
+  const fileExt = file.name.split('.').pop();
+  const cleanBaseName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9]/g, "_");
+  const filePath = `${Date.now()}_${cleanBaseName}.${fileExt}`;
 
   const SUPABASE_URL = "https://stlgpydccimcyvfnwqkh.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bGdweWRjY2ltY3l2Zm53cWtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MzI5NDUsImV4cCI6MjEwMzEwODk0NX0.NBPzbxNl4m-AU4Z5MimxeuGLk00pwJh0X5vFGc-xs1g";
@@ -522,64 +524,60 @@ const filePath = `${Date.now()}_${safeFileName}`;
   try {
     showProgress("Uploading file to cloud storage...");
 
-    // STEP 1: Stream File directly to Supabase Storage via XMLHttpRequest (Tracks 0% -> 90%)
+    // 1. Upload file directly to Supabase Storage Bucket
     await new Promise((resolve, reject) => {
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/materials/${filePath}`);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/materials/${filePath}`);
 
-  // Required headers
-  xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
-  xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-  xhr.setRequestHeader("x-upsert", "false"); // Allows overwriting if necessary
-  
-  // Safe Content-Type fallback
-  const mimeType = file.type && file.type.trim() !== "" ? file.type : "application/octet-stream";
-  xhr.setRequestHeader("Content-Type", mimeType);
+      // Pass SUPABASE_ANON_KEY for both apikey and Authorization
+      xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
+      xhr.setRequestHeader("Authorization", `Bearer ${SUPABASE_ANON_KEY}`);
+      xhr.setRequestHeader("x-upsert", "true");
+      xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
 
-  xhr.upload.onprogress = (evt) => {
-    if (evt.lengthComputable) {
-      const percent = Math.round((evt.loaded / evt.total) * 90);
-      updateProgress(percent);
-    }
-  };
+      xhr.upload.onprogress = (evt) => {
+        if (evt.lengthComputable) {
+          const percent = Math.round((evt.loaded / evt.total) * 90);
+          updateProgress(percent);
+        }
+      };
 
-  xhr.onload = () => {
-    if (xhr.status >= 200 && xhr.status < 300) {
-      resolve();
-    } else {
-      try {
-        const errData = JSON.parse(xhr.responseText);
-        reject(new Error(errData.message || errData.error || "Storage upload failed."));
-      } catch {
-        reject(new Error(`Storage upload failed with status ${xhr.status}.`));
-      }
-    }
-  };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          try {
+            const errData = JSON.parse(xhr.responseText);
+            reject(new Error(errData.message || errData.error || "Storage upload failed."));
+          } catch {
+            reject(new Error(`Storage upload failed with status ${xhr.status}.`));
+          }
+        }
+      };
 
-  xhr.onerror = () => reject(new Error("Network error during file upload to storage."));
-  xhr.send(file);
-});
-    // STEP 2: Construct Public Access URL
+      xhr.onerror = () => reject(new Error("Network error during file upload to storage."));
+      xhr.send(file);
+    });
+
     const publicFileUrl = `${SUPABASE_URL}/storage/v1/object/public/materials/${filePath}`;
 
     showProgress("Saving document details...");
     updateProgress(95);
 
-    // STEP 3: Post Metadata Payload to Express API (Tracks 95% -> 100%)
-    // Sanitize due_date before constructing payload
-const rawDueDate = document.getElementById("matDueDate").value;
-const cleanDueDate = (rawDueDate && rawDueDate.trim() !== "") ? rawDueDate : null;
+    // 2. Pass metadata payload to backend using custom tbhs_token
+    const rawDueDate = document.getElementById("matDueDate").value;
+    const cleanDueDate = (rawDueDate && rawDueDate.trim() !== "") ? rawDueDate : null;
 
-const payload = {
-  title: document.getElementById("matTitle").value,
-  subject: document.getElementById("matSubject").value,
-  class_level: document.getElementById("matClass").value,
-  material_type: document.getElementById("matType").value,
-  description: document.getElementById("matDesc").value,
-  due_date: cleanDueDate,
-  file_name: file.name,
-  file_data: publicFileUrl
-};
+    const payload = {
+      title: document.getElementById("matTitle").value,
+      subject: document.getElementById("matSubject").value,
+      class_level: document.getElementById("matClass").value,
+      material_type: document.getElementById("matType").value,
+      description: document.getElementById("matDesc").value,
+      due_date: cleanDueDate,
+      file_name: file.name,
+      file_data: publicFileUrl
+    };
 
     const res = await fetch(`${API_BASE}/materials/upload`, {
       method: "POST",
@@ -605,7 +603,6 @@ const payload = {
     alert(err.message);
   }
 }
-
     function logout() {
       localStorage.clear();
       window.location.href = "login.html";
