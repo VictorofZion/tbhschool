@@ -1,5 +1,4 @@
 const supabase = require('../config/db');
-const { normalizeClassLevel } = require('../utils/formatters');
 
 // 1. Initialize Paystack Transaction
 const initiatePayment = async (req, res) => {
@@ -10,6 +9,7 @@ const initiatePayment = async (req, res) => {
   }
 
   try {
+    // Fetch student record
     const { data: student, error: stErr } = await supabase
       .from('students')
       .select('id, full_name, email, class_level')
@@ -18,21 +18,21 @@ const initiatePayment = async (req, res) => {
 
     if (stErr || !student) return res.status(404).json({ error: 'Student record not found.' });
 
-    const normalizedClass = normalizeClassLevel(student.class_level);
-
+    // Fetch fee amount for student's class level
     const { data: feeConfig, error: feeErr } = await supabase
       .from('class_fees')
       .select('amount')
-      .eq('class_level', normalizedClass)
+      .eq('class_level', student.class_level)
       .single();
 
     if (feeErr || !feeConfig || feeConfig.amount <= 0) {
-      return res.status(400).json({ error: `No fee amount configured for class level: ${normalizedClass}` });
+      return res.status(400).json({ error: `No fee amount configured for class level: ${student.class_level}` });
     }
 
     const feeInNaira = feeConfig.amount;
-    const amountInKobo = Math.round(feeInNaira * 100);
+    const amountInKobo = Math.round(feeInNaira * 100); // Paystack expects amount in kobo
 
+    // Call Paystack Initialize API
     const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
@@ -44,7 +44,7 @@ const initiatePayment = async (req, res) => {
         amount: amountInKobo,
         metadata: {
           student_id: student.id,
-          class_level: normalizedClass
+          class_level: student.class_level
         }
       })
     });
@@ -77,6 +77,7 @@ const verifyPayment = async (req, res) => {
   }
 
   try {
+    // Verify with Paystack Server
     const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
       method: 'GET',
       headers: {
@@ -87,6 +88,7 @@ const verifyPayment = async (req, res) => {
     const data = await response.json();
 
     if (data.status && data.data.status === 'success') {
+      // Update student fee status in Supabase
       const { data: student, error } = await supabase
         .from('students')
         .update({ fee_status: 'PAID' })
