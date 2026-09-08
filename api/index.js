@@ -9,13 +9,13 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Import routes using relative pathing to project root
+// Files inside /api use ../routes (double dot)
 const authRoutes = require('../routes/authRoutes');
 const adminRoutes = require('../routes/adminRoutes');
 const examRoutes = require('../routes/examRoutes');
 const materialRoutes = require('../routes/materialRoutes');
 const feeRoutes = require('../routes/feeRoutes');
 const paymentRoutes = require('../routes/paymentRoutes');
-
 // Mount API endpoints
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
