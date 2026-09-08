@@ -2,7 +2,7 @@ const supabase = require('../config/db');
 const jwt = require('jsonwebtoken');
 const { normalizeClassLevel } = require('../utils/formatters');
 
-// User Login
+// User Login Handler
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -10,18 +10,25 @@ const login = async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
 
+  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanPassword = String(password).trim();
+
   try {
+    // Single join query that handles students, teachers, and admins
     const { data: user, error } = await supabase
       .from('users')
       .select('*, students(*)')
-      .eq('email', email.trim().toLowerCase())
-      .single();
+      .eq('email', cleanEmail)
+      .maybeSingle();
 
-    if (error || !user || user.password !== password) {
+    if (error || !user || String(user.password).trim() !== cleanPassword) {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    const studentData = user.students && user.students[0] ? user.students[0] : (user.students || {});
+    // Safely extract student details if account is a student
+    const studentData = (user.students && user.students.length > 0) 
+      ? user.students[0] 
+      : (user.students || {});
 
     const payload = {
       id: user.id,
@@ -56,13 +63,16 @@ const createUser = async (req, res) => {
     return res.status(400).json({ error: 'Full name, email, password, and role are required.' });
   }
 
+  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanPassword = String(password).trim();
+
   try {
     const { data: user, error: userErr } = await supabase
       .from('users')
       .insert([{
         full_name,
-        email: email.trim().toLowerCase(),
-        password,
+        email: cleanEmail,
+        password: cleanPassword,
         role,
         avatar_url: avatar_url || 'https://via.placeholder.com/150'
       }])
@@ -77,7 +87,7 @@ const createUser = async (req, res) => {
         .insert([{
           user_id: user.id,
           full_name,
-          email: user.email,
+          email: cleanEmail,
           reg_number: reg_number || 'N/A',
           serial_number: serial_number || 'N/A',
           class_level: normalizeClassLevel(class_level),
