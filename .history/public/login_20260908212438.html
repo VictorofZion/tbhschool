@@ -24,19 +24,88 @@
       border: 1px solid #e4dfd5;
       box-shadow: 0 10px 25px rgba(0,0,0,0.05);
     }
-    .brand-header { text-align: center; margin-bottom: 32px; }
-    .brand-header img { width: 48px; height: auto; margin-bottom: 12px; }
-    .brand-header h2 { font-family: 'Instrument Serif-Regular', serif; color: #0a1931; font-size: 28px; margin: 0 0 4px 0; }
-    .brand-header p { color: #6e7787; font-size: 14px; margin: 0; }
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; font-family: 'Geist-SemiBold', sans-serif; font-size: 13px; color: #0a1931; margin-bottom: 8px; }
-    .form-group input { width: 100%; padding: 12px 16px; border: 1.5px solid #e4dfd5; border-radius: 8px; font-size: 14px; box-sizing: border-box; outline: none; }
-    .form-group input:focus { border-color: #e25b38; }
-    .login-btn { width: 100%; padding: 14px; background-color: #e25b38; color: #ffffff; border: none; border-radius: 8px; font-family: 'Geist-Bold', sans-serif; font-size: 15px; cursor: pointer; }
-    .login-btn:hover { background-color: #c84927; }
-    .alert-box { display: none; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 20px; text-align: center; }
-    .alert-error { background-color: #fde8e8; color: #9b1c1c; border: 1px solid #f8b4b4; }
-    .back-home { display: block; text-align: center; margin-top: 20px; color: #0a1931; font-size: 13px; text-decoration: none; }
+    .brand-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .brand-header img {
+      width: 48px;
+      height: auto;
+      margin-bottom: 12px;
+    }
+    .brand-header h2 {
+      font-family: 'Instrument Serif-Regular', serif;
+      color: #0a1931;
+      font-size: 28px;
+      margin: 0 0 4px 0;
+    }
+    .brand-header p {
+      color: #6e7787;
+      font-size: 14px;
+      margin: 0;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-family: 'Geist-SemiBold', sans-serif;
+      font-size: 13px;
+      color: #0a1931;
+      margin-bottom: 8px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #e4dfd5;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .form-group input:focus {
+      border-color: #e25b38;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background-color: #e25b38;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Geist-Bold', sans-serif;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .login-btn:hover {
+      background-color: #c84927;
+    }
+    .alert-box {
+      display: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .alert-error {
+      background-color: #fde8e8;
+      color: #9b1c1c;
+      border: 1px solid #f8b4b4;
+    }
+    .back-home {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #0a1931;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .back-home:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -72,8 +141,8 @@
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
     const alertBox = document.getElementById("alertBox");
     const submitBtn = document.getElementById("submitBtn");
 
@@ -88,21 +157,38 @@
         body: JSON.stringify({ email, password })
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Authentication failed.");
+      // Prevent SyntaxError: Unexpected token '<' by validating content-type
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const errorText = await response.text();
+        console.error("Non-JSON Server Response:", errorText);
+        throw new Error(`Server route error (${response.status}). Check Vercel API routing.`);
+      }
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Login API Error:", data);
+        throw new Error(data.error || "Authentication failed.");
+      }
+
+      // Store authentication context
       localStorage.setItem("tbhs_token", data.token);
       localStorage.setItem("tbhs_user", JSON.stringify(data.user));
 
+      // Redirect based on assigned user role
       if (data.user.role === "admin") {
         window.location.href = "admin-dashboard.html";
       } else if (data.user.role === "teacher") {
         window.location.href = "teacher-dashboard.html";
       } else if (data.user.role === "student") {
         window.location.href = "student-dashboard.html";
+      } else {
+        window.location.href = "index.html";
       }
 
     } catch (err) {
+      console.error("Login catch error:", err);
       alertBox.innerText = err.message;
       alertBox.style.display = "block";
       submitBtn.innerText = "Sign In";
