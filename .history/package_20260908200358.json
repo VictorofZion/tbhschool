@@ -1,10 +1,10 @@
 {
-  "name": "tbhschool-backend",
+  "name": "tbh-schools-app",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Full-stack TBH Schools Web Application running on Vercel Serverless Functions",
+  "main": "api/index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node api/index.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
