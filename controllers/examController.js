@@ -1,15 +1,5 @@
 const supabase = require('../config/db');
-
-
 const { normalizeClassLevel } = require('../utils/formatters');
-
-// Inside getExamsByClass
-const targetClass = normalizeClassLevel(req.params.classLevel);
-
-const { data: exams } = await supabase
-  .from('exams')
-  .select('*')
-  .eq('class_level', targetClass);
 
 // 1. Create CBT Exam/Test Shell
 const createExam = async (req, res) => {
@@ -20,9 +10,10 @@ const createExam = async (req, res) => {
   }
 
   try {
+    const normalizedClass = normalizeClassLevel(class_level);
     const { data: exam, error } = await supabase
       .from('exams')
-      .insert([{ title, subject, class_level, duration_minutes, type: type || 'test' }])
+      .insert([{ title, subject, class_level: normalizedClass, duration_minutes, type: type || 'test' }])
       .select()
       .single();
 
@@ -66,16 +57,17 @@ const addQuestions = async (req, res) => {
   }
 };
 
-// 3. Get Available Exams for a Specific Class Level with Attempt Status
+// 3. Get Available Exams for a Specific Class Level
 const getExamsByClass = async (req, res) => {
   const { classLevel } = req.params;
-  const studentId = req.user.student_id || req.user.id;
+  const studentId = req.user?.student_id || req.user?.id;
 
   try {
+    const targetClass = normalizeClassLevel(classLevel);
     const { data: exams, error } = await supabase
       .from('exams')
       .select('*')
-      .eq('class_level', classLevel);
+      .eq('class_level', targetClass);
 
     if (error) return res.status(400).json({ error: error.message });
 
@@ -87,7 +79,7 @@ const getExamsByClass = async (req, res) => {
 
     const completedExamIds = new Set((submissions || []).map(s => s.exam_id));
 
-    const enrichedExams = exams.map(e => ({
+    const enrichedExams = (exams || []).map(e => ({
       ...e,
       is_completed: completedExamIds.has(e.id)
     }));
@@ -116,7 +108,7 @@ const getExamQuestions = async (req, res) => {
   }
 };
 
-// 5. Auto-Grade & Submit Exam (Enforces Single Attempt)
+// 5. Auto-Grade & Submit Exam
 const submitExam = async (req, res) => {
   const { exam_id, student_id, answers } = req.body;
 
@@ -125,7 +117,6 @@ const submitExam = async (req, res) => {
   }
 
   try {
-    // Check if student has already attempted this exam
     const { data: existingSubmission } = await supabase
       .from('exam_submissions')
       .select('id')
@@ -137,7 +128,6 @@ const submitExam = async (req, res) => {
       return res.status(400).json({ error: 'You have already completed this assessment. Only one attempt is allowed.' });
     }
 
-    // Fetch exam metadata
     const { data: exam, error: examErr } = await supabase
       .from('exams')
       .select('*')
@@ -146,7 +136,6 @@ const submitExam = async (req, res) => {
 
     if (examErr || !exam) return res.status(404).json({ error: 'Exam configuration not found.' });
 
-    // Fetch correct question answers
     const { data: questions, error: qErr } = await supabase
       .from('questions')
       .select('id, correct_option')
@@ -156,7 +145,6 @@ const submitExam = async (req, res) => {
       return res.status(400).json({ error: 'No questions registered for this exam.' });
     }
 
-    // Auto-grade calculation
     let correctCount = 0;
     const answerMap = new Map(answers.map(a => [String(a.question_id), String(a.selected_option).trim().toUpperCase()]));
 
@@ -171,7 +159,6 @@ const submitExam = async (req, res) => {
     const maxScore = exam.type === 'test' ? 40 : 60;
     const finalScore = parseFloat(((correctCount / totalQuestions) * maxScore).toFixed(1));
 
-    // Record submission
     const { error: subErr } = await supabase
       .from('exam_submissions')
       .insert([{
@@ -184,7 +171,6 @@ const submitExam = async (req, res) => {
 
     if (subErr) return res.status(400).json({ error: subErr.message });
 
-    // Auto-record grade in academic results
     await supabase.from('results').insert([{
       student_id,
       subject: exam.subject,
