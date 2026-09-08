@@ -157,6 +157,14 @@
         body: JSON.stringify({ email, password })
       });
 
+      // Prevent SyntaxError: Unexpected token '<' by validating content-type
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const errorText = await response.text();
+        console.error("Non-JSON Server Response:", errorText);
+        throw new Error(`Server route error (${response.status}). Check Vercel API routing.`);
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
