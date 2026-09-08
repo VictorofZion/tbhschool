@@ -20,7 +20,7 @@ const getUsers = async (req, res) => {
   try {
     let query = supabase
       .from('users')
-      .select('id, full_name, email, role, avatar_url, created_at, students(id, class_level, reg_number, serial_number, fee_status)');
+      .select('id, full_name, email, role, avatar_url, created_at, students!user_id(id, class_level, reg_number, serial_number, fee_status)');
 
     if (role) {
       query = query.eq('role', role);

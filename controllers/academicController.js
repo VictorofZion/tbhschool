@@ -5,7 +5,7 @@ const getStudentsList = async (req, res) => {
   try {
     const { data: students, error } = await supabase
       .from('students')
-      .select('id, reg_number, serial_number, class_level, user_id, users(full_name, email, avatar_url)');
+      .select('id, reg_number, serial_number, class_level, user_id, users!user_id(full_name, email, avatar_url)');
 
     if (error) {
       console.error("Fetch students error:", error);
