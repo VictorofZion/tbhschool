@@ -241,44 +241,50 @@
     }
 
     async function fetchUsers() {
-      const roleFilter = document.getElementById("roleFilter").value;
-      const url = `${API_BASE}/admin/users${roleFilter ? '?role=' + roleFilter : ''}`;
+  const roleFilter = document.getElementById("roleFilter").value;
+  const url = `${API_BASE}/admin/users${roleFilter ? '?role=' + roleFilter : ''}`;
 
-      try {
-        const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
-        const data = await res.json();
-        cachedUsers = data.users || [];
-        
-        const tbody = document.getElementById("usersTableBody");
-        tbody.innerHTML = "";
+  try {
+    const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+    const data = await res.json();
 
-        if (cachedUsers.length > 0) {
-          cachedUsers.forEach(u => {
-            const avatar = u.avatar_url || 'https://via.placeholder.com/150';
-            const student = (u.students && u.students[0]) ? u.students[0] : (u.students || {});
-            const regOrSerial = u.role === 'student' ? `${student.reg_number || 'N/A'} / ${student.serial_number || 'N/A'}` : 'N/A';
-            const classLevel = u.role === 'student' ? (student.class_level || 'N/A') : 'N/A';
-
-            tbody.innerHTML += `
-              <tr>
-                <td><img src="${avatar}" class="user-avatar" alt="Photo" /></td>
-                <td><strong>${u.full_name}</strong></td>
-                <td>${u.email}</td>
-                <td><strong>${u.role.toUpperCase()}</strong></td>
-                <td>${regOrSerial}</td>
-                <td>${classLevel}</td>
-                <td>
-                  <button class="btn-edit" onclick="openEditModal('${u.id}')">Edit</button>
-                  ${u.role !== 'admin' ? `<button class="btn-delete" onclick="deleteUser('${u.id}')">Delete</button>` : ''}
-                </td>
-              </tr>
-            `;
-          });
-        } else {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>`;
-        }
-      } catch (err) { alert("Error loading users."); }
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to load users from backend server.");
     }
+
+    cachedUsers = data.users || [];
+    const tbody = document.getElementById("usersTableBody");
+    tbody.innerHTML = "";
+
+    if (cachedUsers.length > 0) {
+      cachedUsers.forEach(u => {
+        const avatar = u.avatar_url || 'https://via.placeholder.com/150';
+        const student = (u.students && u.students[0]) ? u.students[0] : (u.students || {});
+        const regOrSerial = u.role === 'student' ? `${student.reg_number || 'N/A'} / ${student.serial_number || 'N/A'}` : 'N/A';
+        const classLevel = u.role === 'student' ? (student.class_level || 'N/A') : 'N/A';
+
+        tbody.innerHTML += `
+          <tr>
+            <td><img src="${avatar}" class="user-avatar" alt="Photo" /></td>
+            <td><strong>${u.full_name}</strong></td>
+            <td>${u.email}</td>
+            <td><strong>${u.role.toUpperCase()}</strong></td>
+            <td>${regOrSerial}</td>
+            <td>${classLevel}</td>
+            <td>
+              <button class="btn-edit" onclick="openEditModal('${u.id}')">Edit</button>
+              ${u.role !== 'admin' ? `<button class="btn-delete" onclick="deleteUser('${u.id}')">Delete</button>` : ''}
+            </td>
+          </tr>
+        `;
+      });
+    } else {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No users found in database.</td></tr>`;
+    }
+  } catch (err) {
+    alert(err.message);
+  }
+}
 
     function showProgress(title) {
       document.getElementById("progressTitle").innerText = title;
