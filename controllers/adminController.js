@@ -6,15 +6,26 @@ const getUsers = async (req, res) => {
   const { role } = req.query;
 
   try {
-    let query = supabase.from('users').select('*, students(*)');
+    let query = supabase.from('users').select('id, full_name, email, role, avatar_url, created_at');
     if (role) query = query.eq('role', role);
 
-    const { data: users, error } = await query;
-    if (error) return res.status(400).json({ error: error.message });
+    const { data: users, error: userErr } = await query;
+    if (userErr) return res.status(400).json({ error: userErr.message });
 
-    return res.status(200).json({ success: true, users });
+    // Fetch student profile records separately to avoid PostgREST relationship errors
+    const { data: students, error: stErr } = await supabase.from('students').select('*');
+    if (stErr) console.warn('Could not load student records:', stErr.message);
+
+    const studentMap = new Map((students || []).map(s => [s.user_id, s]));
+
+    const enrichedUsers = (users || []).map(u => ({
+      ...u,
+      students: studentMap.has(u.id) ? [studentMap.get(u.id)] : []
+    }));
+
+    return res.status(200).json({ success: true, users: enrichedUsers });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch users.' });
+    return res.status(500).json({ error: err.message || 'Failed to fetch users.' });
   }
 };
 
@@ -28,7 +39,7 @@ const updateUser = async (req, res) => {
       .from('users')
       .update({
         full_name,
-        email: email.trim().toLowerCase(),
+        email: String(email).trim().toLowerCase(),
         avatar_url
       })
       .eq('id', id)
@@ -41,8 +52,7 @@ const updateUser = async (req, res) => {
       await supabase
         .from('students')
         .update({
-          full_name,
-          email: email.trim().toLowerCase(),
+          email: String(email).trim().toLowerCase(),
           reg_number,
           serial_number,
           class_level: normalizeClassLevel(class_level)
@@ -52,7 +62,7 @@ const updateUser = async (req, res) => {
 
     return res.status(200).json({ success: true, message: 'User updated successfully.', user });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to update user profile.' });
+    return res.status(500).json({ error: err.message || 'Failed to update user profile.' });
   }
 };
 
@@ -66,7 +76,7 @@ const deleteUser = async (req, res) => {
 
     return res.status(200).json({ success: true, message: 'User deleted successfully.' });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to delete user.' });
+    return res.status(500).json({ error: err.message || 'Failed to delete user.' });
   }
 };
 

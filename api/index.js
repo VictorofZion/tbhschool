@@ -29,4 +29,10 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK', system: 'Tetotim Blessed Hope School API' });
 });
 
+// Global JSON Error Handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled Server Error:', err);
+  res.status(500).json({ error: err.message || 'An internal server error occurred.' });
+});
+
 module.exports = app;
