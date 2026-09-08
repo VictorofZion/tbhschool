@@ -14,18 +14,21 @@ const login = async (req, res) => {
   const cleanPassword = String(password).trim();
 
   try {
-    // Single join query that handles students, teachers, and admins
     const { data: user, error } = await supabase
       .from('users')
       .select('*, students(*)')
       .eq('email', cleanEmail)
       .maybeSingle();
 
-    if (error || !user || String(user.password).trim() !== cleanPassword) {
+    if (error) {
+      console.error('Supabase Login Error:', error.message);
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    // Safely extract student details if account is a student
+    if (!user || String(user.password).trim() !== cleanPassword) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
     const studentData = (user.students && user.students.length > 0) 
       ? user.students[0] 
       : (user.students || {});
@@ -94,7 +97,9 @@ const createUser = async (req, res) => {
           fee_status: 'UNPAID'
         }]);
 
-      if (stErr) return res.status(400).json({ error: stErr.message });
+      if (stErr) {
+        console.error('Student Profile Creation Warning:', stErr.message);
+      }
     }
 
     return res.status(201).json({ success: true, message: 'Account created successfully.', user });
