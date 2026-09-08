@@ -30,11 +30,5 @@ app.get('/admin', (req, res) => res.sendFile(path.join(publicPath, 'admin-dashbo
 app.get('/teacher', (req, res) => res.sendFile(path.join(publicPath, 'teacher-dashboard.html')));
 app.get('/student', (req, res) => res.sendFile(path.join(publicPath, 'student-dashboard.html')));
 
-// Global error handling middleware
-app.use((err, req, res, next) => {
-  console.error("Unhandled Error:", err.stack);
-  res.status(500).json({ error: err.message || "Internal Server Error" });
-});
-
 
 module.exports = app;
