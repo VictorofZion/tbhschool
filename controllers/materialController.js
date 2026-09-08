@@ -1,17 +1,7 @@
 const supabase = require('../config/db');
-
-
 const { normalizeClassLevel } = require('../utils/formatters');
 
-// Inside getExamsByClass
-const targetClass = normalizeClassLevel(req.params.classLevel);
-
-const { data: exams } = await supabase
-  .from('exams')
-  .select('*')
-  .eq('class_level', targetClass);
-
-// Upload Learning Material or Note
+// 1. Upload Learning Material or Assignment
 const uploadMaterial = async (req, res) => {
   const { title, subject, class_level, material_type, description, due_date, file_name, file_data } = req.body;
 
@@ -19,7 +9,7 @@ const uploadMaterial = async (req, res) => {
     return res.status(400).json({ error: 'Title, subject, class level, and file attachment are required.' });
   }
 
-  // Convert empty string or whitespace due_date to null
+  const targetClass = normalizeClassLevel(class_level);
   const cleanDueDate = (due_date && String(due_date).trim() !== '') ? due_date : null;
 
   try {
@@ -28,7 +18,7 @@ const uploadMaterial = async (req, res) => {
       .insert([{
         title,
         subject,
-        class_level,
+        class_level: targetClass,
         material_type: material_type || 'note',
         description,
         due_date: cleanDueDate,
@@ -46,13 +36,15 @@ const uploadMaterial = async (req, res) => {
   }
 };
 
-// Fetch Learning Materials by Class
+// 2. Fetch Learning Materials by Class Level
 const getMaterialsByClass = async (req, res) => {
   const { classLevel } = req.params;
   const { type } = req.query;
 
   try {
-    let query = supabase.from('materials').select('*').eq('class_level', classLevel);
+    const targetClass = normalizeClassLevel(classLevel);
+
+    let query = supabase.from('materials').select('*').eq('class_level', targetClass);
     if (type) query = query.eq('material_type', type);
 
     const { data: materials, error } = await query;
