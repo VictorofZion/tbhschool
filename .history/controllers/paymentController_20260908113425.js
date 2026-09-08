@@ -1,15 +1,6 @@
 const supabase = require('../config/db');
 
-const { normalizeClassLevel } = require('../utils/formatters');
 
-// Inside initiatePayment
-const normalizedClass = normalizeClassLevel(student.class_level);
-
-const { data: feeConfig } = await supabase
-  .from('class_fees')
-  .select('amount')
-  .eq('class_level', normalizedClass)
-  .single();
 
 // 1. Initialize Paystack Transaction
 const initiatePayment = async (req, res) => {

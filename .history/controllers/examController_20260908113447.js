@@ -1,15 +1,7 @@
 const supabase = require('../config/db');
 
 
-const { normalizeClassLevel } = require('../utils/formatters');
 
-// Inside getExamsByClass
-const targetClass = normalizeClassLevel(req.params.classLevel);
-
-const { data: exams } = await supabase
-  .from('exams')
-  .select('*')
-  .eq('class_level', targetClass);
 
 // 1. Create CBT Exam/Test Shell
 const createExam = async (req, res) => {

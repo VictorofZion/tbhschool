@@ -1,15 +1,7 @@
 const supabase = require('../config/db');
 
 
-const { normalizeClassLevel } = require('../utils/formatters');
 
-// Inside getExamsByClass
-const targetClass = normalizeClassLevel(req.params.classLevel);
-
-const { data: exams } = await supabase
-  .from('exams')
-  .select('*')
-  .eq('class_level', targetClass);
 
 // Upload Learning Material or Note
 const uploadMaterial = async (req, res) => {
