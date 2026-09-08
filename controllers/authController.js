@@ -18,33 +18,45 @@ const login = async (req, res) => {
   const cleanEmail = email.trim().toLowerCase();
 
   try {
+    // 1. Query users table directly without enforcing joins
     const { data: user, error } = await supabase
       .from('users')
-      .select('*, students(*)')
+      .select('*')
       .eq('email', cleanEmail)
       .maybeSingle();
 
     if (error) {
       console.error("Database query error during login:", error);
-      return res.status(400).json({ error: 'Invalid email or password.' });
+      return res.status(500).json({ error: `Database Error: ${error.message}` });
     }
 
     if (!user) {
       return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
+    // 2. Validate password against stored bcrypt hash
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
+    // 3. Fetch student profile only if account role is student
+    let studentInfo = null;
+    if (user.role === 'student') {
+      const { data: student } = await supabase
+        .from('students')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      studentInfo = student;
+    }
+
+    // 4. Generate token
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET || 'tbhs_super_secret_jwt_key_2026',
       { expiresIn: '8h' }
     );
-
-    const studentInfo = Array.isArray(user.students) ? user.students[0] : user.students;
 
     return res.status(200).json({
       success: true,
