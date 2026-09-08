@@ -40,8 +40,8 @@ app.use('/api/academic', academicRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/materials', materialRoutes);
-app.use('/api/fees', require('./routes/feeRoutes'));
-app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/payments', paymentRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production') {

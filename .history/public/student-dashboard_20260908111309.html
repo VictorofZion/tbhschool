@@ -320,15 +320,14 @@
     }
 
     async function paySchoolFees() {
-  if (typeof PaystackPop === "undefined") {
-    alert("Paystack SDK failed to load. Please check your internet connection.");
+  if (typeof window.RmPaymentEngine === "undefined") {
+    alert("Remita SDK not loaded. Check your internet connection or script URL.");
     return;
   }
 
   try {
-    showProgress("Retrieving Class Fee Configuration...");
+    showProgress("Initiating Payment Gateway...");
 
-    // 1. Initialize Paystack transaction on Express Backend
     const res = await fetch(`${API_BASE}/payments/initiate`, {
       method: "POST",
       headers: {
@@ -336,7 +335,10 @@
         "Authorization": `Bearer ${token}`
       },
       body: JSON.stringify({
-        student_id: studentProfile.id
+        student_id: studentProfile.id,
+        amount: 150000,
+        payer_name: user.full_name,
+        payer_email: user.email
       })
     });
 
@@ -344,15 +346,23 @@
     if (!res.ok) throw new Error(data.error);
 
     hideProgress();
+    const config = data.paymentConfig;
 
-    // 2. Open Paystack Popup Modal with access_code
-    const handler = PaystackPop.setup({
-      key: data.publicKey,
-      access_code: data.access_code,
-      callback: async function (response) {
+    // Initialize Remita Widget with mandatory hash parameter
+    const paymentEngine = window.RmPaymentEngine.init({
+      key: config.publicKey || config.merchantId,
+      merchantId: config.merchantId,
+      serviceTypeId: config.serviceTypeId,
+      transactionId: config.orderId,
+      amount: config.amount,
+      hash: config.apiHash, // CRITICAL: Required by Remita to generate RRR and proceed to payment
+      narration: "Tetotim Blessed Hope School Term Fee",
+      description: "Tetotim Blessed Hope School Term Fee",
+      payerName: user.full_name || "Student",
+      payerEmail: user.email,
+      payerPhone: "08000000000",
+      onSuccess: async function (response) {
         showProgress("Verifying Payment...");
-
-        // 3. Verify Payment Reference Server-Side
         const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
           method: "POST",
           headers: {
@@ -360,7 +370,8 @@
             "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({
-            reference: response.reference,
+            rrr: response.RRR || response.rrr || response.paymentReference,
+            orderId: config.orderId,
             studentId: studentProfile.id
           })
         });
@@ -369,19 +380,22 @@
         hideProgress();
 
         if (verifyRes.ok) {
-          alert(`Payment Successful! ₦${data.amount.toLocaleString()} received.`);
+          alert("Payment Successful! Your school fee status has been updated.");
           location.reload();
         } else {
           alert(`Verification Error: ${verifyData.error}`);
         }
       },
+      onError: function (err) {
+        hideProgress();
+        alert("Payment failed or was cancelled.");
+      },
       onClose: function () {
         hideProgress();
-        alert("Payment window closed.");
       }
     });
 
-    handler.openIframe();
+    paymentEngine.showPaymentWidget();
 
   } catch (err) {
     hideProgress();

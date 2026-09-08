@@ -297,54 +297,6 @@
     </div>
   </div>
 
-
-<div class="card">
-  <h3>Class Fee Setup</h3>
-  <form id="feeSetupForm" onsubmit="handleSetFee(event)">
-    <label>Class Level:</label>
-    <select id="feeClassSelect" required>
-      <option value="JSS 1">JSS 1</option>
-      <option value="JSS 2">JSS 2</option>
-      <option value="JSS 3">JSS 3</option>
-      <option value="SSS 1">SSS 1</option>
-      <option value="SSS 2">SSS 2</option>
-      <option value="SSS 3">SSS 3</option>
-    </select>
-
-    <label>Amount (₦):</label>
-    <input type="number" id="feeAmountInput" min="0" placeholder="e.g. 150000" required />
-
-    <button type="submit" class="btn">Update Class Fee</button>
-  </form>
-</div>
-
-<script>
-async function handleSetFee(e) {
-  e.preventDefault();
-  const class_level = document.getElementById('feeClassSelect').value;
-  const amount = parseFloat(document.getElementById('feeAmountInput').value);
-
-  try {
-    const res = await fetch('/api/fees/set', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ class_level, amount })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-
-    alert(`Success: Fee for ${class_level} set to ₦${amount.toLocaleString()}`);
-  } catch (err) {
-    alert(err.message);
-  }
-}
-</script>
-
-
   <!-- Universal Progress Loader Modal -->
   <div class="progress-modal-overlay" id="progressModal">
     <div class="progress-modal-card">
