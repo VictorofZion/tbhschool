@@ -12,10 +12,11 @@ const createUser = async (req, res) => {
 
   try {
     const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
 
     const { data: user, error: uErr } = await supabase
       .from('users')
-      .insert([{ full_name, email: cleanEmail, password: password.trim(), avatar_url, role }])
+      .insert([{ full_name, email: cleanEmail, password: cleanPassword, avatar_url, role }])
       .select()
       .single();
 
@@ -52,25 +53,29 @@ const loginUser = async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
 
-    // Query user record using case-insensitive email matching and maybeSingle()
+    // Query user record by email first
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
       .ilike('email', cleanEmail)
-      .eq('password', cleanPassword)
       .maybeSingle();
 
     if (userError) {
-      return res.status(500).json({ error: `Database error: ${userError.message}` });
+      return res.status(500).json({ error: `Database Error: ${userError.message}` });
     }
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password credentials.' });
+      return res.status(401).json({ error: 'No user account found with this email address.' });
+    }
+
+    // Compare stored password against incoming password
+    if (String(user.password).trim() !== cleanPassword) {
+      return res.status(401).json({ error: 'Incorrect password entered.' });
     }
 
     let studentData = {};
 
-    // Fetch student record separately if user role is student
+    // Fetch student profile if user is a student
     if (user.role === 'student') {
       const { data: student } = await supabase
         .from('students')
@@ -81,7 +86,7 @@ const loginUser = async (req, res) => {
       if (student) studentData = student;
     }
 
-    // Generate JWT Token
+    // Sign JWT token
     const token = jwt.sign(
       { id: user.id, role: user.role, student_id: studentData.id || null },
       process.env.JWT_SECRET || 'tbhschool_secret_key',
@@ -105,7 +110,7 @@ const loginUser = async (req, res) => {
       }
     });
   } catch (err) {
-    return res.status(500).json({ error: 'Authentication processing failed.' });
+    return res.status(500).json({ error: `Server error: ${err.message}` });
   }
 };
 

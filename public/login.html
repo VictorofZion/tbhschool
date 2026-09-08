@@ -141,8 +141,8 @@
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
     const alertBox = document.getElementById("alertBox");
     const submitBtn = document.getElementById("submitBtn");
 
@@ -160,21 +160,27 @@
       const data = await response.json();
 
       if (!response.ok) {
+        console.error("Login API Error:", data);
         throw new Error(data.error || "Authentication failed.");
       }
 
+      // Store authentication context
       localStorage.setItem("tbhs_token", data.token);
       localStorage.setItem("tbhs_user", JSON.stringify(data.user));
 
+      // Redirect based on assigned user role
       if (data.user.role === "admin") {
         window.location.href = "admin-dashboard.html";
       } else if (data.user.role === "teacher") {
         window.location.href = "teacher-dashboard.html";
       } else if (data.user.role === "student") {
         window.location.href = "student-dashboard.html";
+      } else {
+        window.location.href = "index.html";
       }
 
     } catch (err) {
+      console.error("Login catch error:", err);
       alertBox.innerText = err.message;
       alertBox.style.display = "block";
       submitBtn.innerText = "Sign In";
