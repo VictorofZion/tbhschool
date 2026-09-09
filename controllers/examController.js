@@ -203,14 +203,13 @@ const submitExam = async (req, res) => {
     const scaledScore = Math.round(((rawScore / totalQuestions) * weightLimit) * 10) / 10;
 
     // 6. Explicitly record submission in exam_submissions
-   // 6. Explicitly record submission in exam_submissions
+  // 6. Explicitly record submission in exam_submissions
     const { error: subInsertErr } = await supabase
       .from('exam_submissions')
       .insert([{
         exam_id,
         student_id,
         score: rawScore,
-        raw_score: rawScore,
         correct_count: rawScore,
         max_score: totalQuestions,
         total_questions: totalQuestions
