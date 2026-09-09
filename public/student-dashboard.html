@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Student Portal - Tetotim Blessed Hope School</title>
   <link rel="stylesheet" href="global.css" />
-  <script src="https://remitademo.net/payment/v1/remita-pay-inline.bundle.js"></script>
+  <!-- Paystack Inline JS SDK -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
   <style>
     :root {
       --primary-navy: #0a1931;
@@ -31,7 +32,8 @@
     .badge { padding: 6px 12px; border-radius: 100px; font-weight: 700; font-size: 12px; }
     .badge-paid { background: #d4edda; color: #155724; }
     .badge-unpaid { background: #f8d7da; color: #721c24; }
-    .pay-btn { background-color: var(--accent-coral); color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .pay-btn { background-color: #09a5db; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .pay-btn:hover { background-color: #0782ad; }
     .card { background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; }
     table { width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 8px; overflow: hidden; }
     th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
@@ -162,7 +164,7 @@
       document.getElementById('studentInfo').innerHTML = `Status: <span class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}">${studentProfile.fee_status}</span>`;
       document.getElementById('paymentAction').innerHTML = isPaid 
         ? `<span class="badge badge-paid">Fees Fully Settled</span>`
-        : `<button onclick="paySchoolFees()" class="pay-btn">Pay School Fees (Remita)</button>`;
+        : `<button onclick="paySchoolFeesWithPaystack()" class="pay-btn">Pay Fees via Paystack</button>`;
 
       loadResults();
     });
@@ -278,38 +280,75 @@
       } catch (err) { console.error("Failed to load materials", err); }
     }
 
-    async function paySchoolFees() {
+    async function paySchoolFeesWithPaystack() {
       try {
+        // 1. Fetch exact class fee and transaction reference from server
         const res = await fetch(`${API_BASE}/payments/initiate`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ student_id: studentProfile.id, amount: 150000, payer_name: user.full_name, payer_email: user.email })
+          headers: { 
+            "Content-Type": "application/json", 
+            "Authorization": `Bearer ${token}` 
+          },
+          body: JSON.stringify({ 
+            student_id: studentProfile.id,
+            payer_email: user.email 
+          })
         });
+
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        const config = data.paymentConfig;
-        var paymentEngine = RmPaymentEngine.initiatePayment({
-          key: config.merchantId,
-          transactionId: config.orderId,
-          customerId: user.email,
-          firstName: user.full_name,
-          email: user.email,
-          amount: config.amount,
-          narration: "TBHS School Fee Payment",
-          onSuccess: async function (response) {
-            await fetch(`${API_BASE}/payments/verify`, {
+        // Confirm amount with user before opening checkout pop-up
+        const confirmPay = confirm(`School fee for ${data.classLevel} is ₦${data.nairaAmount.toLocaleString()}. Proceed to Paystack payment gateway?`);
+        if (!confirmPay) return;
+
+        // 2. Trigger Paystack Inline Popup
+        const handler = PaystackPop.setup({
+          key: data.paystackKey,
+          email: data.email,
+          amount: data.amount, // In Kobo
+          currency: "NGN",
+          ref: data.reference,
+          metadata: {
+            custom_fields: [
+              { display_name: "Student Name", variable_name: "student_name", value: user.full_name },
+              { display_name: "Class Level", variable_name: "class_level", value: data.classLevel }
+            ]
+          },
+          callback: async function(response) {
+            // 3. Verify successful transaction with backend
+            const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
               method: "POST",
-              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-              body: JSON.stringify({ rrr: response.RRR, orderId: config.orderId, studentId: studentProfile.id })
+              headers: { 
+                "Content-Type": "application/json", 
+                "Authorization": `Bearer ${token}` 
+              },
+              body: JSON.stringify({ 
+                reference: response.reference, 
+                studentId: studentProfile.id 
+              })
             });
-            alert("Payment Verified!");
+
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok) throw new Error(verifyData.error || "Payment verification failed.");
+
+            alert("Payment Verified Successfully!");
+            
+            // Update local user object and refresh page
+            user.fee_status = 'PAID';
+            localStorage.setItem("tbhs_user", JSON.stringify(user));
             location.reload();
           },
-          onError: function () { alert("Payment Cancelled."); }
+          onClose: function() {
+            alert("Payment window closed.");
+          }
         });
-        paymentEngine.showPaymentWidget();
-      } catch (err) { alert(err.message); }
+
+        handler.openIframe();
+
+      } catch (err) { 
+        alert(err.message); 
+      }
     }
 
     function downloadFileWithProgress(fileDataUrl, fileName) {
