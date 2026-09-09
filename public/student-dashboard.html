@@ -300,75 +300,87 @@
     }
 
     async function paySchoolFeesWithPaystack() {
-      try {
-        const res = await fetch(`${API_BASE}/payments/initiate`, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json", 
-            "Authorization": `Bearer ${token}` 
-          },
-          body: JSON.stringify({ 
-            student_id: studentProfile.id,
-            payer_email: user.email 
-          })
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-
-        const confirmPay = confirm(`School fee for ${data.classLevel} is ₦${data.nairaAmount.toLocaleString()}. Proceed to Paystack payment gateway?`);
-        if (!confirmPay) return;
-
-        const handler = PaystackPop.setup({
-          key: data.paystackKey,
-          email: data.email,
-          amount: data.amount,
-          currency: "NGN",
-          ref: data.reference,
-          metadata: {
-            custom_fields: [
-              { display_name: "Student Name", variable_name: "student_name", value: user.full_name },
-              { display_name: "Class Level", variable_name: "class_level", value: data.classLevel }
-            ]
-          },
-          callback: function(response) {
-            (async () => {
-              try {
-                const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
-                  method: "POST",
-                  headers: { 
-                    "Content-Type": "application/json", 
-                    "Authorization": `Bearer ${token}` 
-                  },
-                  body: JSON.stringify({ 
-                    reference: response.reference, 
-                    studentId: studentProfile.id 
-                  })
-                });
-
-                const verifyData = await verifyRes.json();
-                if (!verifyRes.ok) throw new Error(verifyData.error || "Payment verification failed.");
-
-                alert("Payment Verified Successfully!");
-                user.fee_status = 'PAID';
-                localStorage.setItem("tbhs_user", JSON.stringify(user));
-                location.reload();
-              } catch (err) {
-                alert(err.message);
-              }
-            })();
-          },
-          onClose: function() {
-            alert("Payment window closed.");
-          }
-        });
-
-        handler.openIframe();
-
-      } catch (err) { 
-        alert(err.message); 
-      }
+  try {
+    // Ensure candidate email exists and is valid
+    const cleanEmail = (user.email || "").trim();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      alert("A valid email address is required to process payment. Please update your email profile or re-login.");
+      return;
     }
+
+    // 1. Fetch exact class fee and transaction reference from server
+    const res = await fetch(`${API_BASE}/payments/initiate`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json", 
+        "Authorization": `Bearer ${token}` 
+      },
+      body: JSON.stringify({ 
+        student_id: studentProfile.id,
+        payer_email: cleanEmail 
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    const payerEmail = (data.email || cleanEmail).trim();
+
+    // Confirm amount with user before opening checkout pop-up
+    const confirmPay = confirm(`School fee for ${data.classLevel} is ₦${data.nairaAmount.toLocaleString()}. Proceed to Paystack payment gateway?`);
+    if (!confirmPay) return;
+
+    // 2. Trigger Paystack Inline Popup with guaranteed valid email
+    const handler = PaystackPop.setup({
+      key: data.paystackKey,
+      email: payerEmail,
+      amount: data.amount, // In Kobo
+      currency: "NGN",
+      ref: data.reference,
+      metadata: {
+        custom_fields: [
+          { display_name: "Student Name", variable_name: "student_name", value: user.full_name },
+          { display_name: "Class Level", variable_name: "class_level", value: data.classLevel }
+        ]
+      },
+      callback: function(response) {
+        (async () => {
+          try {
+            const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
+              method: "POST",
+              headers: { 
+                "Content-Type": "application/json", 
+                "Authorization": `Bearer ${token}` 
+              },
+              body: JSON.stringify({ 
+                reference: response.reference, 
+                studentId: studentProfile.id 
+              })
+            });
+
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok) throw new Error(verifyData.error || "Payment verification failed.");
+
+            alert("Payment Verified Successfully!");
+            user.fee_status = 'PAID';
+            localStorage.setItem("tbhs_user", JSON.stringify(user));
+            location.reload();
+          } catch (err) {
+            alert(err.message);
+          }
+        })();
+      },
+      onClose: function() {
+        alert("Payment window closed.");
+      }
+    });
+
+    handler.openIframe();
+
+  } catch (err) { 
+    alert(err.message); 
+  }
+}
 
     function downloadFileWithProgress(fileDataUrl, fileName) {
       if (fileDataUrl.startsWith("http")) {
