@@ -51,7 +51,7 @@ const addQuestions = async (req, res) => {
   }
 };
 
-// Fetch Available Assessments for a Class Level
+// Fetch Available Assessments for a Class Level & Resolve Completion Status
 const getExamsByClass = async (req, res) => {
   const { classLevel } = req.params;
   const userId = req.user.id;
@@ -64,22 +64,30 @@ const getExamsByClass = async (req, res) => {
 
     if (error) return res.status(400).json({ error: error.message });
 
-    // Look up primary student record ID
     const { data: student } = await supabase
       .from('students')
       .select('id')
       .eq('user_id', userId)
       .maybeSingle();
 
-    let completedExamIds = [];
-    if (student) {
-      const { data: submissions } = await supabase
-        .from('exam_submissions')
-        .select('exam_id')
-        .eq('student_id', student.id);
+    const studentDbId = student ? student.id : null;
 
-      completedExamIds = (submissions || []).map(s => s.exam_id);
+    // Check completion using both user_id and student_id to match legacy and new records
+    let queryFilter = `student_id.eq.${userId}`;
+    if (studentDbId) {
+      queryFilter += `,student_id.eq.${studentDbId}`;
     }
+
+    const { data: submissions, error: subError } = await supabase
+      .from('exam_submissions')
+      .select('exam_id')
+      .or(queryFilter);
+
+    if (subError) {
+      console.error("Error checking completion submissions:", subError);
+    }
+
+    const completedExamIds = (submissions || []).map(s => s.exam_id);
 
     const examsWithStatus = (exams || []).map(e => ({
       ...e,
@@ -136,24 +144,20 @@ const getExamQuestions = async (req, res) => {
   }
 };
 
-// Submit Exam Answers, Scale Score & Mark Completion
+// Submit Exam Answers, Record Submission & Sync Scaled Score
 const submitExam = async (req, res) => {
   const { exam_id, answers } = req.body;
   const userId = req.user.id;
 
   try {
-    // 1. Resolve student record ID from students table
+    // 1. Resolve student profile
     const { data: student } = await supabase
       .from('students')
       .select('id, fee_status')
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (!student) {
-      return res.status(404).json({ error: 'Student profile record not found.' });
-    }
-
-    const student_id = student.id;
+    const student_id = student ? student.id : userId;
 
     // 2. Fetch assessment details
     const { data: exam, error: examErr } = await supabase
@@ -166,16 +170,18 @@ const submitExam = async (req, res) => {
       return res.status(404).json({ error: 'Assessment record not found.' });
     }
 
-    // 3. Fee verification for terminal exams
-    if (exam.type === 'exam' && student.fee_status !== 'PAID') {
+    // 3. Verify fee status for terminal exams
+    if (exam.type === 'exam' && (!student || student.fee_status !== 'PAID')) {
       return res.status(403).json({ error: 'Cannot submit terminal examination without verified fee payment.' });
     }
 
     // 4. Fetch questions and grade choices
-    const { data: questions } = await supabase
+    const { data: questions, error: qErr } = await supabase
       .from('questions')
       .select('id, correct_option')
       .eq('exam_id', exam_id);
+
+    if (qErr) return res.status(400).json({ error: qErr.message });
 
     const totalQuestions = (questions || []).length;
     if (totalQuestions === 0) {
@@ -192,19 +198,26 @@ const submitExam = async (req, res) => {
       }
     });
 
-    // 5. Calculate proportional weighted score (40m for test, 60m for exam)
+    // 5. Calculate scaled score (40m for test, 60m for exam)
     const weightLimit = exam.type === 'test' ? 40 : 60;
     const scaledScore = Math.round(((rawScore / totalQuestions) * weightLimit) * 10) / 10;
 
-    // 6. Record completion entry in exam_submissions
-    await supabase.from('exam_submissions').insert([{
-      exam_id,
-      student_id,
-      score: rawScore,
-      max_score: totalQuestions
-    }]);
+    // 6. Explicitly record submission in exam_submissions
+    const { error: subInsertErr } = await supabase
+      .from('exam_submissions')
+      .insert([{
+        exam_id,
+        student_id,
+        score: rawScore,
+        max_score: totalQuestions
+      }]);
 
-    // 7. Sync scaled grade into results table
+    if (subInsertErr) {
+      console.error("Failed to insert exam submission:", subInsertErr);
+      return res.status(400).json({ error: `Submission failed: ${subInsertErr.message}` });
+    }
+
+    // 7. Sync scaled score into academic results record
     const { data: existingResult } = await supabase
       .from('results')
       .select('id, test_score, exam_score')
@@ -220,12 +233,14 @@ const submitExam = async (req, res) => {
         updatePayload.exam_score = scaledScore;
       }
 
-      await supabase
+      const { error: resUpdateErr } = await supabase
         .from('results')
         .update(updatePayload)
         .eq('id', existingResult.id);
+
+      if (resUpdateErr) console.error("Result update error:", resUpdateErr);
     } else {
-      await supabase
+      const { error: resInsertErr } = await supabase
         .from('results')
         .insert([{
           student_id,
@@ -235,6 +250,8 @@ const submitExam = async (req, res) => {
           term: '1st Term',
           session: '2026/2027'
         }]);
+
+      if (resInsertErr) console.error("Result insert error:", resInsertErr);
     }
 
     return res.status(200).json({ 
