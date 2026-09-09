@@ -93,6 +93,7 @@
               <th>Role</th>
               <th>Reg / Serial No</th>
               <th>Class</th>
+              <th>Date of Birth</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -149,6 +150,10 @@
                 <option value="SSS 3">SSS 3</option>
               </select>
             </div>
+            <div class="form-group student-field">
+              <label>Date of Birth (Student Only)</label>
+              <input type="date" id="dobInput" />
+            </div>
           </div>
           <button type="submit" class="btn-submit">Create Account</button>
         </form>
@@ -200,6 +205,10 @@
               <option value="SSS 2">SSS 2</option>
               <option value="SSS 3">SSS 3</option>
             </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label>Date of Birth</label>
+            <input type="date" id="editDobInput" />
           </div>
         </div>
 
@@ -263,6 +272,7 @@
             const studentObj = Array.isArray(u.students) ? u.students[0] : (u.students || {});
             const regOrSerial = u.role === 'student' ? `${studentObj.reg_number || 'N/A'} / ${studentObj.serial_number || 'N/A'}` : 'N/A';
             const classLevel = u.role === 'student' ? (studentObj.class_level || 'N/A') : 'N/A';
+            const dob = u.role === 'student' ? (studentObj.date_of_birth || 'N/A') : 'N/A';
 
             tbody.innerHTML += `
               <tr>
@@ -272,6 +282,7 @@
                 <td><strong>${u.role.toUpperCase()}</strong></td>
                 <td>${regOrSerial}</td>
                 <td>${classLevel}</td>
+                <td>${dob}</td>
                 <td>
                   <button class="btn-edit" onclick="openEditModal('${u.id}')">Edit</button>
                   ${u.role !== 'admin' ? `<button class="btn-delete" onclick="deleteUser('${u.id}')">Delete</button>` : ''}
@@ -280,7 +291,7 @@
             `;
           });
         } else {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No users found.</td></tr>`;
         }
       } catch (err) { alert(err.message); }
     }
@@ -331,9 +342,10 @@
         password: document.getElementById("userPassword").value,
         avatar_url,
         role: document.getElementById("userRole").value,
-        reg_number: document.getElementById("regNumber").value,
-        serial_number: document.getElementById("serialNumber").value,
-        class_level: document.getElementById("classLevel").value
+        reg_number: document.getElementById("regNumber")?.value,
+        serial_number: document.getElementById("serialNumber")?.value,
+        class_level: document.getElementById("classLevel")?.value,
+        date_of_birth: document.getElementById("dobInput")?.value
       };
 
       try {
@@ -370,6 +382,7 @@
         document.getElementById("editRegNumber").value = studentObj.reg_number || '';
         document.getElementById("editSerialNumber").value = studentObj.serial_number || '';
         document.getElementById("editClassLevel").value = studentObj.class_level || 'JSS 1';
+        document.getElementById("editDobInput").value = studentObj.date_of_birth || '';
       } else {
         studentBox.style.display = "none";
       }
@@ -399,7 +412,8 @@
         role,
         reg_number: document.getElementById("editRegNumber")?.value,
         serial_number: document.getElementById("editSerialNumber")?.value,
-        class_level: document.getElementById("editClassLevel")?.value
+        class_level: document.getElementById("editClassLevel")?.value,
+        date_of_birth: document.getElementById("editDobInput")?.value
       };
 
       try {
@@ -429,11 +443,6 @@
         alert("User deleted.");
         fetchUsers();
       } catch (err) { alert(err.message); }
-    }
-
-    function logout() {
-      localStorage.clear();
-      window.location.href = "login.html";
     }
 
     fetchUsers();

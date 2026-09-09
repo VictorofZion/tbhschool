@@ -18,40 +18,28 @@ const login = async (req, res) => {
   const cleanEmail = email.trim().toLowerCase();
 
   try {
-    // 1. Query users table directly without enforcing joins
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
       .eq('email', cleanEmail)
       .maybeSingle();
 
-    if (error) {
-      console.error("Database query error during login:", error);
-      return res.status(500).json({ error: `Database Error: ${error.message}` });
-    }
+    if (error) return res.status(500).json({ error: `Database Error: ${error.message}` });
+    if (!user) return res.status(400).json({ error: 'Invalid email or password.' });
 
-    if (!user) {
-      return res.status(400).json({ error: 'Invalid email or password.' });
-    }
-
-    // 2. Validate password against stored bcrypt hash
     const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(400).json({ error: 'Invalid email or password.' });
-    }
+    if (!validPassword) return res.status(400).json({ error: 'Invalid email or password.' });
 
-    // 3. Fetch student profile only if account role is student
     let studentInfo = null;
     if (user.role === 'student') {
       const { data: student } = await supabase
         .from('students')
-        .select('*')
+        .select('id, reg_number, class_level, serial_number, fee_status') // Explicitly omit date_of_birth
         .eq('user_id', user.id)
         .maybeSingle();
       studentInfo = student;
     }
 
-    // 4. Generate token
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET || 'tbhs_super_secret_jwt_key_2026',
@@ -75,13 +63,12 @@ const login = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("Login Server Error:", err);
     return res.status(500).json({ error: 'Internal server error during authentication.' });
   }
 };
 
 const createUser = async (req, res) => {
-  const { full_name, email, password, role, avatar_url, reg_number, class_level } = req.body;
+  const { full_name, email, password, role, avatar_url, reg_number, class_level, date_of_birth } = req.body;
 
   if (!full_name || !email || !password || !role) {
     return res.status(400).json({ error: 'Full name, email, password, and role are required.' });
@@ -116,6 +103,7 @@ const createUser = async (req, res) => {
           reg_number: finalRegNum,
           serial_number: finalSerialNum,
           class_level: class_level || 'JSS 1',
+          date_of_birth: date_of_birth || null,
           fee_status: 'UNPAID'
         }]);
 
@@ -127,7 +115,6 @@ const createUser = async (req, res) => {
 
     return res.status(201).json({ success: true, message: 'User created successfully', user });
   } catch (err) {
-    console.error("Create User Error:", err);
     return res.status(500).json({ error: err.message });
   }
 };

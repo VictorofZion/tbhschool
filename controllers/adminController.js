@@ -20,7 +20,7 @@ const getUsers = async (req, res) => {
   try {
     let query = supabase
       .from('users')
-      .select('id, full_name, email, role, avatar_url, created_at, students!user_id(id, class_level, reg_number, serial_number, fee_status)');
+      .select('id, full_name, email, role, avatar_url, created_at, students!user_id(id, class_level, reg_number, serial_number, fee_status, date_of_birth)');
 
     if (role) {
       query = query.eq('role', role);
@@ -28,10 +28,7 @@ const getUsers = async (req, res) => {
 
     const { data: users, error } = await query;
 
-    if (error) {
-      console.error("Get users query error:", error);
-      return res.status(400).json({ error: error.message });
-    }
+    if (error) return res.status(400).json({ error: error.message });
 
     return res.status(200).json({ success: true, users: users || [] });
   } catch (err) {
@@ -41,7 +38,7 @@ const getUsers = async (req, res) => {
 
 const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { full_name, email, role, avatar_url, class_level, reg_number, serial_number } = req.body;
+  const { full_name, email, role, avatar_url, class_level, reg_number, serial_number, date_of_birth } = req.body;
 
   try {
     const updateData = { full_name, email, role };
@@ -63,10 +60,12 @@ const updateUser = async (req, res) => {
         .eq('user_id', id)
         .maybeSingle();
 
+      const cleanDOB = (date_of_birth && String(date_of_birth).trim() !== '') ? date_of_birth : null;
+
       if (existingStudent) {
         const { error: studentError } = await supabase
           .from('students')
-          .update({ class_level, reg_number, serial_number })
+          .update({ class_level, reg_number, serial_number, date_of_birth: cleanDOB })
           .eq('user_id', id);
 
         if (studentError) return res.status(400).json({ error: studentError.message });
@@ -78,6 +77,7 @@ const updateUser = async (req, res) => {
             class_level: class_level || 'JSS 1',
             reg_number: reg_number || 'N/A',
             serial_number: serial_number || `SN-${Math.floor(100000 + Math.random() * 900000)}`,
+            date_of_birth: cleanDOB,
             fee_status: 'UNPAID'
           }]);
 
@@ -87,7 +87,6 @@ const updateUser = async (req, res) => {
 
     return res.status(200).json({ success: true, message: 'User updated successfully.', user });
   } catch (err) {
-    console.error("Update User Error:", err);
     return res.status(500).json({ error: 'Failed to update user record.' });
   }
 };
