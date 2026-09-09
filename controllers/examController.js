@@ -1,214 +1,106 @@
 const supabase = require('../config/db');
 
-// 1. Create CBT Exam/Test Shell
-const createExam = async (req, res) => {
-  const { title, subject, class_level, duration_minutes, type } = req.body;
-
-  if (!title || !subject || !class_level) {
-    return res.status(400).json({ error: 'Title, subject, and class level are required.' });
-  }
-
-  try {
-    const { data: exam, error } = await supabase
-      .from('exams')
-      .insert([{ title, subject, class_level, duration_minutes, type: type || 'test' }])
-      .select()
-      .single();
-
-    if (error) return res.status(400).json({ error: error.message });
-
-    return res.status(201).json({ success: true, exam });
-  } catch (err) {
-    return res.status(500).json({ error: 'Failed to create exam shell.' });
-  }
-};
-
-// 2. Add Questions to an Existing Exam
-const addQuestions = async (req, res) => {
-  const { exam_id, questions } = req.body;
-
-  if (!exam_id || !Array.isArray(questions) || questions.length === 0) {
-    return res.status(400).json({ error: 'Exam ID and questions array are required.' });
-  }
-
-  try {
-    const questionsToInsert = questions.map(q => ({
-      exam_id,
-      question_text: q.question_text,
-      option_a: q.option_a,
-      option_b: q.option_b,
-      option_c: q.option_c,
-      option_d: q.option_d,
-      correct_option: q.correct_option
-    }));
-
-    const { data, error } = await supabase
-      .from('questions')
-      .insert(questionsToInsert)
-      .select();
-
-    if (error) return res.status(400).json({ error: error.message });
-
-    return res.status(201).json({ success: true, questions: data });
-  } catch (err) {
-    return res.status(500).json({ error: 'Failed to insert exam questions.' });
-  }
-};
-
-// 3. Get Available Exams for Class with Real-time Completion Check
-const getExamsByClass = async (req, res) => {
-  const { classLevel } = req.params;
+// Get questions for a specific assessment
+const getExamQuestions = async (req, res) => {
+  const { examId } = req.params;
   const userId = req.user.id;
 
   try {
-    // Resolve both student profile ID and user account ID
-    const { data: studentRecord } = await supabase
-      .from('students')
-      .select('id')
-      .eq('user_id', userId)
+    // 1. Fetch target assessment details
+    const { data: exam, error: examErr } = await supabase
+      .from('exams')
+      .select('id, type, title')
+      .eq('id', examId)
       .maybeSingle();
 
-    const studentTableId = studentRecord ? studentRecord.id : userId;
+    if (examErr || !exam) {
+      return res.status(404).json({ error: 'Assessment record not found.' });
+    }
 
-    // Fetch exams matching class level
-    const { data: exams, error } = await supabase
-      .from('exams')
-      .select('*')
-      .eq('class_level', classLevel);
+    // 2. Enforce fee restriction for terminal examinations
+    if (req.user.role === 'student') {
+      const { data: student } = await supabase
+        .from('students')
+        .select('fee_status')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    if (error) return res.status(400).json({ error: error.message });
+      const isUnpaid = !student || student.fee_status !== 'PAID';
 
-    // Fetch existing submissions matching either student profile ID or account user ID
-    const { data: submissions } = await supabase
-      .from('exam_submissions')
-      .select('exam_id')
-      .or(`student_id.eq.${studentTableId},student_id.eq.${userId}`);
+      if (exam.type === 'exam' && isUnpaid) {
+        return res.status(403).json({
+          error: 'Access Restricted: You must clear your school fee payment to sit for terminal examinations.'
+        });
+      }
+    }
 
-    const completedExamIds = new Set((submissions || []).map(s => s.exam_id));
-
-    // Mark completion status on each assessment
-    const enrichedExams = (exams || []).map(e => ({
-      ...e,
-      is_completed: completedExamIds.has(e.id)
-    }));
-
-    return res.status(200).json({ success: true, exams: enrichedExams });
-  } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch class examinations.' });
-  }
-};
-
-// 4. Get Questions for a Specific Exam ID
-const getExamQuestions = async (req, res) => {
-  const { examId } = req.params;
-
-  try {
-    const { data: questions, error } = await supabase
+    // 3. Retrieve assessment questions
+    const { data: questions, error: qErr } = await supabase
       .from('questions')
       .select('id, question_text, option_a, option_b, option_c, option_d')
       .eq('exam_id', examId);
 
-    if (error) return res.status(400).json({ error: error.message });
+    if (qErr) return res.status(400).json({ error: qErr.message });
 
-    return res.status(200).json({ success: true, questions });
+    return res.status(200).json({ success: true, questions: questions || [] });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch exam questions.' });
+    return res.status(500).json({ error: 'Failed to fetch examination questions.' });
   }
 };
 
-// 5. Auto-Grade & Record Exam Submission
+// Submit completed assessment answers
 const submitExam = async (req, res) => {
   const { exam_id, student_id, answers } = req.body;
 
-  if (!exam_id || !student_id || !Array.isArray(answers)) {
-    return res.status(400).json({ error: 'Exam ID, Student ID, and answers array are required.' });
-  }
-
   try {
-    // Check if student has already attempted this exam
-    const { data: existingSubmission } = await supabase
-      .from('exam_submissions')
-      .select('id')
-      .eq('exam_id', exam_id)
-      .eq('student_id', student_id)
-      .maybeSingle();
-
-    if (existingSubmission) {
-      return res.status(400).json({ error: 'You have already completed this assessment. Only one attempt is allowed.' });
-    }
-
-    // Fetch exam configuration
-    const { data: exam, error: examErr } = await supabase
+    // Check fee status on submission as a secondary guardrail
+    const { data: exam } = await supabase
       .from('exams')
-      .select('*')
+      .select('type')
       .eq('id', exam_id)
       .single();
 
-    if (examErr || !exam) return res.status(404).json({ error: 'Exam configuration not found.' });
+    if (exam && exam.type === 'exam') {
+      const { data: student } = await supabase
+        .from('students')
+        .select('fee_status')
+        .eq('id', student_id)
+        .single();
 
-    // Fetch correct question answers
-    const { data: questions, error: qErr } = await supabase
+      if (!student || student.fee_status !== 'PAID') {
+        return res.status(403).json({ error: 'Cannot submit terminal examination without verified fee payment.' });
+      }
+    }
+
+    // Process evaluation logic...
+    const { data: questions } = await supabase
       .from('questions')
       .select('id, correct_option')
       .eq('exam_id', exam_id);
 
-    if (qErr || !questions || questions.length === 0) {
-      return res.status(400).json({ error: 'No questions registered for this exam.' });
-    }
+    let score = 0;
+    const answerKey = {};
+    (questions || []).forEach(q => { answerKey[q.id] = q.correct_option; });
 
-    // Calculate score
-    let correctCount = 0;
-    const answerMap = new Map(answers.map(a => [String(a.question_id), String(a.selected_option).trim().toUpperCase()]));
-
-    questions.forEach(q => {
-      const selected = answerMap.get(String(q.id));
-      if (selected && selected === String(q.correct_option).trim().toUpperCase()) {
-        correctCount++;
+    (answers || []).forEach(a => {
+      if (answerKey[a.question_id] && answerKey[a.question_id] === a.selected_option) {
+        score += 1;
       }
     });
 
-    const totalQuestions = questions.length;
-    const maxScore = exam.type === 'test' ? 40 : 60;
-    const finalScore = parseFloat(((correctCount / totalQuestions) * maxScore).toFixed(1));
+    const maxScore = (questions || []).length;
 
-    // Record submission to lock out future attempts
-    const { error: subErr } = await supabase
-      .from('exam_submissions')
-      .insert([{
-        exam_id,
-        student_id,
-        score: finalScore,
-        total_questions: totalQuestions,
-        correct_count: correctCount
-      }]);
-
-    if (subErr) return res.status(400).json({ error: subErr.message });
-
-    // Post to results table for term transcripts
-    await supabase.from('results').insert([{
+    await supabase.from('exam_submissions').insert([{
+      exam_id,
       student_id,
-      subject: exam.subject,
-      test_score: exam.type === 'test' ? finalScore : 0,
-      exam_score: exam.type === 'exam' ? finalScore : 0,
-      term: '1st Term',
-      session: '2026/2027'
+      score,
+      max_score: maxScore
     }]);
 
-    return res.status(200).json({
-      success: true,
-      message: 'Assessment graded and recorded successfully.',
-      score: finalScore,
-      maxScore
-    });
+    return res.status(200).json({ success: true, score, maxScore });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to process assessment submission.' });
+    return res.status(500).json({ error: 'Failed to process exam evaluation.' });
   }
 };
 
-module.exports = {
-  createExam,
-  addQuestions,
-  getExamsByClass,
-  getExamQuestions,
-  submitExam
-};
+module.exports = { getExamQuestions, submitExam };

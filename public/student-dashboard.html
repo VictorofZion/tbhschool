@@ -222,41 +222,48 @@
     }
 
     async function loadExams() {
-      if (!studentProfile.class_level) return;
-      try {
-        const res = await fetch(`${API_BASE}/exams/class/${studentProfile.class_level}`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-        const tbody = document.getElementById("examsTableBody");
-        tbody.innerHTML = "";
+  if (!studentProfile.class_level) return;
+  try {
+    const res = await fetch(`${API_BASE}/exams/class/${studentProfile.class_level}`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const tbody = document.getElementById("examsTableBody");
+    tbody.innerHTML = "";
 
-        if (data.exams && data.exams.length > 0) {
-          data.exams.forEach(e => {
-            const typeBadge = e.type === 'test' 
-              ? `<span style="background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">TEST (40M)</span>`
-              : `<span style="background: #fbe9e7; color: #d84315; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">EXAM (60M)</span>`;
+    if (data.exams && data.exams.length > 0) {
+      data.exams.forEach(e => {
+        const typeBadge = e.type === 'test' 
+          ? `<span style="background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">TEST (40M)</span>`
+          : `<span style="background: #fbe9e7; color: #d84315; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">EXAM (60M)</span>`;
 
-            const actionCell = e.is_completed
-              ? `<span style="background: #e8f5e9; color: #2e7d32; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px;">COMPLETED</span>`
-              : `<a href="exam.html?examId=${e.id}&duration=${e.duration_minutes}" class="btn-action">Start Assessment</a>`;
+        // Check if student is locked out of terminal exam due to unpaid fee status
+        const isExamLocked = e.type === 'exam' && studentProfile.fee_status !== 'PAID';
 
-            tbody.innerHTML += `
-              <tr>
-                <td><strong>${e.title}</strong> ${typeBadge}</td>
-                <td>${e.subject}</td>
-                <td>${e.class_level}</td>
-                <td>${e.duration_minutes} Mins</td>
-                <td>${actionCell}</td>
-              </tr>
-            `;
-          });
+        let actionCell = "";
+        if (e.is_completed) {
+          actionCell = `<span style="background: #e8f5e9; color: #2e7d32; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px;">COMPLETED</span>`;
+        } else if (isExamLocked) {
+          actionCell = `<span style="background: #f8d7da; color: #721c24; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px;">FEES REQUIRED</span>`;
         } else {
-          tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #6e7787;">No CBT tests or exams scheduled.</td></tr>`;
+          actionCell = `<a href="exam.html?examId=${e.id}&duration=${e.duration_minutes}" class="btn-action">Start Assessment</a>`;
         }
-      } catch (err) { console.error("Failed to load exams", err); }
-    }
 
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${e.title}</strong> ${typeBadge}</td>
+            <td>${e.subject}</td>
+            <td>${e.class_level}</td>
+            <td>${e.duration_minutes} Mins</td>
+            <td>${actionCell}</td>
+          </tr>
+        `;
+      });
+    } else {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #6e7787;">No CBT tests or exams scheduled.</td></tr>`;
+    }
+  } catch (err) { console.error("Failed to load exams", err); }
+}
     async function loadAssignments() {
       if (!studentProfile.class_level) return;
       const filterType = document.getElementById("materialTypeFilter") ? document.getElementById("materialTypeFilter").value : "";
