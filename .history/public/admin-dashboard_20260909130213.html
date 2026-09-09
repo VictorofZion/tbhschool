@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard - Tetotim Blessed Hope School</title>
+  <!-- Browser Tab Favicon -->
+<link rel="icon" type="image/png" href="items/logo.png" />
+<!-- Apple iOS Shortcut Icon -->
+<link rel="apple-touch-icon" href="items/logo.png" />
+  <link rel="stylesheet" href="global.css" />
+  <style>
+    :root {
+      --primary-navy: #0a1931;
+      --accent-coral: #e25b38;
+      --bg-cream: #f9f6f0;
+      --border-color: #e4dfd5;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Geist-Regular', sans-serif; background-color: var(--bg-cream); color: #1c1c1c; display: flex; min-height: 100vh; }
+    .sidebar { width: 260px; background-color: var(--primary-navy); color: #ffffff; padding: 32px 20px; display: flex; flex-direction: column; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .brand img { width: 36px; height: auto; }
+    .brand h2 { font-family: 'Geist-Bold', sans-serif; font-size: 16px; margin: 0; }
+    .nav-links { display: flex; flex-direction: column; gap: 8px; }
+    .nav-btn { background: transparent; border: none; color: #e4dfd5; padding: 12px 16px; text-align: left; font-size: 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .nav-btn.active, .nav-btn:hover { background-color: var(--accent-coral); color: #ffffff; }
+    .logout-btn { background-color: rgba(255,255,255,0.1); color: #ffffff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; }
+    .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+    .header-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+    .admin-avatar-header { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-coral); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .card { background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 24px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 13px; font-weight: 600; }
+    input, select { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; }
+    .btn-submit { background-color: var(--accent-coral); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 12px; width: 100%; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+    th { background-color: #f1ede4; color: var(--primary-navy); }
+    .badge { padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; }
+    .badge-paid { background: #d4edda; color: #155724; }
+    .badge-unpaid { background: #f8d7da; color: #721c24; }
+    .user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-coral); }
+    .btn-edit { background-color: #2980b9; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 6px; }
+    .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 25, 49, 0.75); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-card { background: #ffffff; padding: 32px; border-radius: 12px; width: 90%; max-width: 550px; max-height: 90vh; overflow-y: auto; }
+    .progress-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 25, 49, 0.85); z-index: 2000; justify-content: center; align-items: center; }
+    .progress-modal-card { background: #ffffff; padding: 32px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; }
+    .progress-track { width: 100%; height: 12px; background: #e4dfd5; border-radius: 6px; overflow: hidden; margin: 16px 0 8px 0; }
+    .progress-fill { width: 0%; height: 100%; background: var(--accent-coral); transition: width 0.2s ease; }
+    .progress-percent-text { font-family: 'Geist-Bold', sans-serif; font-size: 14px; color: var(--primary-navy); }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div>
+      <div class="brand">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="items/logo.png" alt="Logo" />
+          <h2>TBHS Admin</h2>
+        </div>
+        <button class="mobile-nav-toggle" onclick="toggleMobileMenu()">☰</button>
+      </div>
+      <nav class="nav-links">
+        <button class="nav-btn active" onclick="switchTab('usersTab', event)">All Users</button>
+        <button class="nav-btn" onclick="switchTab('feesTab', event)">School Fee Setup</button>
+        <button class="nav-btn" onclick="switchTab('createUserTab', event)">Create User Account</button>
+      </nav>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign Out</button>
+  </aside>
+
+  <main class="main-content">
+    <div class="header-bar">
+      <img id="adminAvatar" src="https://via.placeholder.com/150" class="admin-avatar-header" alt="Admin Avatar" />
+      <div>
+        <h1 id="tabTitle" style="font-family: 'Instrument Serif-Regular', serif; font-size: 36px; color: var(--primary-navy); margin: 0;">User Management</h1>
+        <span id="adminName" style="color: var(--accent-coral); font-weight: 600;">Welcome, Admin</span>
+      </div>
+    </div>
+
+    <!-- Tab 1: All Users -->
+    <section id="usersTab" class="tab-content active">
+      <div class="card">
+        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+          <select id="roleFilter" onchange="fetchUsers()">
+            <option value="">All Roles</option>
+            <option value="student">Students</option>
+            <option value="teacher">Teachers</option>
+            <option value="admin">Admins</option>
+          </select>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Photo</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Reg / Serial No</th>
+                <th>Class</th>
+                <th>Fee Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 2: School Fee Structure Setup -->
+    <section id="feesTab" class="tab-content">
+      <div class="card">
+        <h2 style="font-family: 'Instrument Serif-Regular', serif; color: var(--primary-navy); margin-top: 0;">Configure Class Fee Amounts</h2>
+        <form id="classFeeForm" onsubmit="handleUpdateClassFee(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Select Class Level</label>
+              <select id="feeClassLevel" required>
+                <option value="JSS 1">JSS 1</option>
+                <option value="JSS 2">JSS 2</option>
+                <option value="JSS 3">JSS 3</option>
+                <option value="SSS 1">SSS 1</option>
+                <option value="SSS 2">SSS 2</option>
+                <option value="SSS 3">SSS 3</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>School Fee Amount (NGN)</label>
+              <input type="number" id="feeAmount" min="0" step="1000" placeholder="150000" required />
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Update Fee Structure</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Current Class Fee Amounts</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Class Level</th>
+                <th>Fee Amount (NGN)</th>
+                <th>Last Updated</th>
+              </tr>
+            </thead>
+            <tbody id="feesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: Create User -->
+    <section id="createUserTab" class="tab-content">
+      <div class="card">
+        <form id="createUserForm" onsubmit="handleCreateUser(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="fullName" required />
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="userEmail" required />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="userPassword" required />
+            </div>
+            <div class="form-group">
+              <label>Upload Display Picture</label>
+              <input type="file" id="avatarFileInput" accept="image/*" />
+            </div>
+            <div class="form-group">
+              <label>Role</label>
+              <select id="userRole" onchange="toggleStudentFields()" required>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="form-group student-field">
+              <label>Registration Number</label>
+              <input type="text" id="regNumber" placeholder="TBH/2026/001" />
+            </div>
+            <div class="form-group student-field">
+              <label>Unique Serial Number</label>
+              <input type="text" id="serialNumber" placeholder="SN-TBHS-982134" />
+            </div>
+            <div class="form-group student-field">
+              <label>Class Level</label>
+              <select id="classLevel">
+                <option value="JSS 1">JSS 1</option>
+                <option value="JSS 2">JSS 2</option>
+                <option value="JSS 3">JSS 3</option>
+                <option value="SSS 1">SSS 1</option>
+                <option value="SSS 2">SSS 2</option>
+                <option value="SSS 3">SSS 3</option>
+              </select>
+            </div>
+            <div class="form-group student-field">
+              <label>Date of Birth</label>
+              <input type="date" id="dobInput" />
+            </div>
+            <div class="form-group student-field">
+              <label>Fee Status Certification</label>
+              <select id="feeStatusInput">
+                <option value="UNPAID">UNPAID</option>
+                <option value="PAID">PAID</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Create Account</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Edit User Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-card">
+      <h2 style="font-family: 'Instrument Serif-Regular', serif; margin-top: 0; color: var(--primary-navy);">Edit User Profile</h2>
+      <form id="editUserForm" onsubmit="handleUpdateUser(event)">
+        <input type="hidden" id="editUserId" />
+        <input type="hidden" id="editRole" />
+        
+        <div style="text-align: center; margin-bottom: 16px;">
+          <img id="editAvatarPreview" src="" class="user-avatar" style="width: 72px; height: 72px;" alt="Preview" />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label>Full Name</label>
+          <input type="text" id="editFullName" required />
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label>Email Address</label>
+          <input type="email" id="editEmail" required />
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label>Change Display Photo</label>
+          <input type="file" id="editAvatarInput" accept="image/*" />
+        </div>
+
+        <div id="editStudentFields">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label>Registration Number</label>
+            <input type="text" id="editRegNumber" />
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label>Serial Number</label>
+            <input type="text" id="editSerialNumber" />
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label>Class Level</label>
+            <select id="editClassLevel">
+              <option value="JSS 1">JSS 1</option>
+              <option value="JSS 2">JSS 2</option>
+              <option value="JSS 3">JSS 3</option>
+              <option value="SSS 1">SSS 1</option>
+              <option value="SSS 2">SSS 2</option>
+              <option value="SSS 3">SSS 3</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label>Date of Birth</label>
+            <input type="date" id="editDobInput" />
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label>Certify Fee Payment Status</label>
+            <select id="editFeeStatus">
+              <option value="UNPAID">UNPAID</option>
+              <option value="PAID">PAID</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 20px;">
+          <button type="submit" class="btn-submit" style="flex: 1; margin: 0;">Save Changes</button>
+          <button type="button" onclick="closeEditModal()" style="padding: 12px; border: 1px solid var(--border-color); background: #eee; border-radius: 6px; cursor: pointer;">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Progress Loader Modal -->
+  <div class="progress-modal-overlay" id="progressModal">
+    <div class="progress-modal-card">
+      <h3 id="progressTitle" style="font-family: 'Instrument Serif-Regular', serif; font-size: 24px; color: #0a1931; margin: 0;">Processing...</h3>
+      <div class="progress-track"><div class="progress-fill" id="progressBar"></div></div>
+      <div class="progress-percent-text" id="progressPercent">0%</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "/api";
+    const token = localStorage.getItem("tbhs_token");
+    const user = JSON.parse(localStorage.getItem("tbhs_user") || "{}");
+    let cachedUsers = [];
+
+    if (!token || user.role !== "admin") window.location.href = "login.html";
+
+    document.getElementById("adminName").innerText = `Welcome, ${user.full_name || 'Admin'}`;
+    if (user.avatar_url) document.getElementById("adminAvatar").src = user.avatar_url;
+
+    function toggleMobileMenu() {
+      document.getElementById("sidebar").classList.toggle("mobile-open");
+    }
+
+    function switchTab(tabId, evt) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
+      document.getElementById(tabId).classList.add("active");
+      if (evt && evt.target) evt.target.classList.add("active");
+      document.getElementById("sidebar").classList.remove("mobile-open");
+      if (tabId === 'usersTab') fetchUsers();
+      if (tabId === 'feesTab') fetchClassFees();
+    }
+
+    function toggleStudentFields() {
+      const role = document.getElementById("userRole").value;
+      document.querySelectorAll(".student-field").forEach(f => f.style.display = role === "student" ? "flex" : "none");
+    }
+
+    async function fetchUsers() {
+      const roleFilter = document.getElementById("roleFilter").value;
+      const url = `${API_BASE}/admin/users${roleFilter ? '?role=' + roleFilter : ''}`;
+
+      try {
+        const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load users.");
+
+        cachedUsers = data.users || [];
+        const tbody = document.getElementById("usersTableBody");
+        tbody.innerHTML = "";
+
+        if (cachedUsers.length > 0) {
+          cachedUsers.forEach(u => {
+            const avatar = u.avatar_url || 'https://via.placeholder.com/150';
+            const studentObj = Array.isArray(u.students) ? u.students[0] : (u.students || {});
+            const regOrSerial = u.role === 'student' ? `${studentObj.reg_number || 'N/A'} / ${studentObj.serial_number || 'N/A'}` : 'N/A';
+            const classLevel = u.role === 'student' ? (studentObj.class_level || 'N/A') : 'N/A';
+            const feeBadge = u.role === 'student' 
+              ? (studentObj.fee_status === 'PAID' ? '<span class="badge badge-paid">PAID</span>' : '<span class="badge badge-unpaid">UNPAID</span>')
+              : 'N/A';
+
+            tbody.innerHTML += `
+              <tr>
+                <td><img src="${avatar}" class="user-avatar" alt="Photo" /></td>
+                <td><strong>${u.full_name}</strong></td>
+                <td>${u.email}</td>
+                <td><strong>${u.role.toUpperCase()}</strong></td>
+                <td>${regOrSerial}</td>
+                <td>${classLevel}</td>
+                <td>${feeBadge}</td>
+                <td>
+                  <button class="btn-edit" onclick="openEditModal('${u.id}')">Edit</button>
+                  ${u.role !== 'admin' ? `<button class="btn-delete" onclick="deleteUser('${u.id}')">Delete</button>` : ''}
+                </td>
+              </tr>
+            `;
+          });
+        } else {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No users found.</td></tr>`;
+        }
+      } catch (err) { alert(err.message); }
+    }
+
+    async function fetchClassFees() {
+      try {
+        const res = await fetch(`${API_BASE}/admin/fees`, { headers: { "Authorization": `Bearer ${token}` } });
+        const data = await res.json();
+        const tbody = document.getElementById("feesTableBody");
+        tbody.innerHTML = "";
+
+        if (data.fees && data.fees.length > 0) {
+          data.fees.forEach(f => {
+            tbody.innerHTML += `
+              <tr>
+                <td><strong>${f.class_level}</strong></td>
+                <td><strong>₦${parseFloat(f.amount).toLocaleString()}</strong></td>
+                <td>${new Date(f.updated_at).toLocaleDateString()}</td>
+              </tr>
+            `;
+          });
+        } else {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">No fee configurations found.</td></tr>`;
+        }
+      } catch (err) { alert(err.message); }
+    }
+
+    async function handleUpdateClassFee(e) {
+      e.preventDefault();
+      const payload = {
+        class_level: document.getElementById("feeClassLevel").value,
+        amount: parseFloat(document.getElementById("feeAmount").value)
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/fees`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        alert("Fee structure updated!");
+        document.getElementById("feeAmount").value = "";
+        fetchClassFees();
+      } catch (err) { alert(err.message); }
+    }
+
+    function showProgress(title) {
+      document.getElementById("progressTitle").innerText = title;
+      document.getElementById("progressBar").style.width = "0%";
+      document.getElementById("progressPercent").innerText = "0%";
+      document.getElementById("progressModal").style.display = "flex";
+    }
+
+    function updateProgress(percent) {
+      const bounded = Math.min(100, Math.max(0, percent));
+      document.getElementById("progressBar").style.width = `${bounded}%`;
+      document.getElementById("progressPercent").innerText = `${bounded}%`;
+    }
+
+    function hideProgress() { document.getElementById("progressModal").style.display = "none"; }
+
+    function fileToBase64WithProgress(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onprogress = (evt) => {
+          if (evt.lengthComputable) {
+            updateProgress(Math.round((evt.loaded / evt.total) * 100));
+          }
+        };
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleCreateUser(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById("avatarFileInput");
+      let avatar_url = "https://via.placeholder.com/150";
+
+      if (fileInput.files && fileInput.files[0]) {
+        showProgress("Processing Display Picture...");
+        avatar_url = await fileToBase64WithProgress(fileInput.files[0]);
+        hideProgress();
+      }
+
+      const payload = {
+        full_name: document.getElementById("fullName").value,
+        email: document.getElementById("userEmail").value,
+        password: document.getElementById("userPassword").value,
+        avatar_url,
+        role: document.getElementById("userRole").value,
+        reg_number: document.getElementById("regNumber")?.value,
+        serial_number: document.getElementById("serialNumber")?.value,
+        class_level: document.getElementById("classLevel")?.value,
+        date_of_birth: document.getElementById("dobInput")?.value,
+        fee_status: document.getElementById("feeStatusInput")?.value || 'UNPAID'
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/create-user`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        alert("User account created successfully!");
+        document.getElementById("createUserForm").reset();
+        switchTab("usersTab");
+      } catch (err) { alert(err.message); }
+    }
+
+    function openEditModal(userId) {
+      const u = cachedUsers.find(item => item.id === userId);
+      if (!u) return;
+
+      const studentObj = Array.isArray(u.students) ? u.students[0] : (u.students || {});
+
+      document.getElementById("editUserId").value = u.id;
+      document.getElementById("editRole").value = u.role;
+      document.getElementById("editFullName").value = u.full_name;
+      document.getElementById("editEmail").value = u.email;
+      document.getElementById("editAvatarPreview").src = u.avatar_url || 'https://via.placeholder.com/150';
+
+      const studentBox = document.getElementById("editStudentFields");
+      if (u.role === 'student') {
+        studentBox.style.display = "block";
+        document.getElementById("editRegNumber").value = studentObj.reg_number || '';
+        document.getElementById("editSerialNumber").value = studentObj.serial_number || '';
+        document.getElementById("editClassLevel").value = studentObj.class_level || 'JSS 1';
+        document.getElementById("editDobInput").value = studentObj.date_of_birth || '';
+        document.getElementById("editFeeStatus").value = studentObj.fee_status || 'UNPAID';
+      } else {
+        studentBox.style.display = "none";
+      }
+
+      document.getElementById("editModal").style.display = "flex";
+    }
+
+    function closeEditModal() { document.getElementById("editModal").style.display = "none"; }
+
+    async function handleUpdateUser(e) {
+      e.preventDefault();
+      const userId = document.getElementById("editUserId").value;
+      const role = document.getElementById("editRole").value;
+      const fileInput = document.getElementById("editAvatarInput");
+      let avatar_url = document.getElementById("editAvatarPreview").src;
+
+      if (fileInput.files && fileInput.files[0]) {
+        showProgress("Uploading Updated Image...");
+        avatar_url = await fileToBase64WithProgress(fileInput.files[0]);
+        hideProgress();
+      }
+
+      const payload = {
+        full_name: document.getElementById("editFullName").value,
+        email: document.getElementById("editEmail").value,
+        avatar_url,
+        role,
+        reg_number: document.getElementById("editRegNumber")?.value,
+        serial_number: document.getElementById("editSerialNumber")?.value,
+        class_level: document.getElementById("editClassLevel")?.value,
+        date_of_birth: document.getElementById("editDobInput")?.value,
+        fee_status: document.getElementById("editFeeStatus")?.value
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/users/${userId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to update profile.");
+
+        alert("Profile updated successfully!");
+        closeEditModal();
+        fetchUsers();
+      } catch (err) { alert(err.message); }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm("Are you sure you want to delete this user?")) return;
+      try {
+        const res = await fetch(`${API_BASE}/admin/users/${userId}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Delete failed");
+        alert("User deleted.");
+        fetchUsers();
+      } catch (err) { alert(err.message); }
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    }
+
+    fetchUsers();
+  </script>
+</body>
+</html>
