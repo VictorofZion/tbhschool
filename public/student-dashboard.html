@@ -280,43 +280,46 @@
       } catch (err) { console.error("Failed to load materials", err); }
     }
 
-    async function paySchoolFeesWithPaystack() {
-      try {
-        // 1. Fetch exact class fee and transaction reference from server
-        const res = await fetch(`${API_BASE}/payments/initiate`, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json", 
-            "Authorization": `Bearer ${token}` 
-          },
-          body: JSON.stringify({ 
-            student_id: studentProfile.id,
-            payer_email: user.email 
-          })
-        });
+async function paySchoolFeesWithPaystack() {
+  try {
+    // 1. Fetch exact class fee and transaction reference from server
+    const res = await fetch(`${API_BASE}/payments/initiate`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json", 
+        "Authorization": `Bearer ${token}` 
+      },
+      body: JSON.stringify({ 
+        student_id: studentProfile.id,
+        payer_email: user.email 
+      })
+    });
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
 
-        // Confirm amount with user before opening checkout pop-up
-        const confirmPay = confirm(`School fee for ${data.classLevel} is ₦${data.nairaAmount.toLocaleString()}. Proceed to Paystack payment gateway?`);
-        if (!confirmPay) return;
+    // Confirm amount with user before opening checkout pop-up
+    const confirmPay = confirm(`School fee for ${data.classLevel} is ₦${data.nairaAmount.toLocaleString()}. Proceed to Paystack payment gateway?`);
+    if (!confirmPay) return;
 
-        // 2. Trigger Paystack Inline Popup
-        const handler = PaystackPop.setup({
-          key: data.paystackKey,
-          email: data.email,
-          amount: data.amount, // In Kobo
-          currency: "NGN",
-          ref: data.reference,
-          metadata: {
-            custom_fields: [
-              { display_name: "Student Name", variable_name: "student_name", value: user.full_name },
-              { display_name: "Class Level", variable_name: "class_level", value: data.classLevel }
-            ]
-          },
-          callback: async function(response) {
-            // 3. Verify successful transaction with backend
+    // 2. Trigger Paystack Inline Popup
+    const handler = PaystackPop.setup({
+      key: data.paystackKey,
+      email: data.email,
+      amount: data.amount, // In Kobo
+      currency: "NGN",
+      ref: data.reference,
+      metadata: {
+        custom_fields: [
+          { display_name: "Student Name", variable_name: "student_name", value: user.full_name },
+          { display_name: "Class Level", variable_name: "class_level", value: data.classLevel }
+        ]
+      },
+      // Use standard synchronous function for Paystack SDK type checking
+      callback: function(response) {
+        (async () => {
+          try {
+            // Verify successful transaction with backend
             const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
               method: "POST",
               headers: { 
@@ -338,18 +341,22 @@
             user.fee_status = 'PAID';
             localStorage.setItem("tbhs_user", JSON.stringify(user));
             location.reload();
-          },
-          onClose: function() {
-            alert("Payment window closed.");
+          } catch (err) {
+            alert(err.message);
           }
-        });
-
-        handler.openIframe();
-
-      } catch (err) { 
-        alert(err.message); 
+        })();
+      },
+      onClose: function() {
+        alert("Payment window closed.");
       }
-    }
+    });
+
+    handler.openIframe();
+
+  } catch (err) { 
+    alert(err.message); 
+  }
+}
 
     function downloadFileWithProgress(fileDataUrl, fileName) {
       if (fileDataUrl.startsWith("http")) {
