@@ -135,12 +135,12 @@ const getExamQuestions = async (req, res) => {
   }
 };
 
-// Submit Exam Answers, Evaluate Score, and Automatically Sync with Results Table
+// Submit Exam Answers, Calculate Weighted Score, and Sync with Results Table
 const submitExam = async (req, res) => {
   const { exam_id, student_id, answers } = req.body;
 
   try {
-    // 1. Fetch assessment meta details (subject & type)
+    // 1. Fetch assessment meta details
     const { data: exam, error: examErr } = await supabase
       .from('exams')
       .select('id, type, subject, title')
@@ -151,7 +151,7 @@ const submitExam = async (req, res) => {
       return res.status(404).json({ error: 'Assessment record not found.' });
     }
 
-    // 2. Secondary Fee verification guard for terminal examinations
+    // 2. Verify fee status for terminal exams
     if (exam.type === 'exam') {
       const { data: student } = await supabase
         .from('students')
@@ -164,33 +164,40 @@ const submitExam = async (req, res) => {
       }
     }
 
-    // 3. Fetch questions and evaluate student choices
+    // 3. Fetch questions and grade choices
     const { data: questions } = await supabase
       .from('questions')
       .select('id, correct_option')
       .eq('exam_id', exam_id);
 
-    let score = 0;
+    const totalQuestions = (questions || []).length;
+    if (totalQuestions === 0) {
+      return res.status(400).json({ error: 'This assessment contains no questions.' });
+    }
+
+    let rawScore = 0;
     const answerKey = {};
     (questions || []).forEach(q => { answerKey[q.id] = q.correct_option; });
 
     (answers || []).forEach(a => {
       if (answerKey[a.question_id] && answerKey[a.question_id] === a.selected_option) {
-        score += 1;
+        rawScore += 1;
       }
     });
 
-    const maxScore = (questions || []).length;
+    // 4. Calculate proportional score based on assessment target weight
+    const weightLimit = exam.type === 'test' ? 40 : 60;
+    const scaledScore = Math.round(((rawScore / totalQuestions) * weightLimit) * 10) / 10;
 
-    // 4. Record entry in exam_submissions table
+    // 5. Store raw audit record in exam_submissions
     await supabase.from('exam_submissions').insert([{
       exam_id,
       student_id,
-      score,
-      max_score: maxScore
+      score: rawScore,
+      max_score: totalQuestions
     }]);
 
-    // 5. Sync calculated score to academic results record
+    // 6. Sync scaled grade to student's academic results record
     const { data: existingResult } = await supabase
       .from('results')
       .select('id, test_score, exam_score')
@@ -199,12 +206,11 @@ const submitExam = async (req, res) => {
       .maybeSingle();
 
     if (existingResult) {
-      // Update existing grade row for this student and subject
       const updatePayload = {};
       if (exam.type === 'test') {
-        updatePayload.test_score = score;
+        updatePayload.test_score = scaledScore;
       } else {
-        updatePayload.exam_score = score;
+        updatePayload.exam_score = scaledScore;
       }
 
       await supabase
@@ -212,22 +218,28 @@ const submitExam = async (req, res) => {
         .update(updatePayload)
         .eq('id', existingResult.id);
     } else {
-      // Create new academic result row for this subject
       await supabase
         .from('results')
         .insert([{
           student_id,
           subject: exam.subject,
-          test_score: exam.type === 'test' ? score : 0,
-          exam_score: exam.type === 'exam' ? score : 0,
+          test_score: exam.type === 'test' ? scaledScore : 0,
+          exam_score: exam.type === 'exam' ? scaledScore : 0,
           term: '1st Term',
           session: '2026/2027'
         }]);
     }
 
-    return res.status(200).json({ success: true, score, maxScore });
+    return res.status(200).json({ 
+      success: true, 
+      score: scaledScore, 
+      maxScore: weightLimit,
+      rawScore,
+      totalQuestions 
+    });
+
   } catch (err) {
-    console.error("Submission processing error:", err);
+    console.error("Submission error:", err);
     return res.status(500).json({ error: 'Failed to process exam evaluation.' });
   }
 };
