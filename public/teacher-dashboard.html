@@ -79,7 +79,14 @@
           </div>
           <div class="form-group">
             <label>Subject</label>
-            <input type="text" id="subject" placeholder="Mathematics, English, Physics" required />
+            <select id="matSubject" required>
+              <option value="Mathematics">Mathematics</option>
+              <option value="English">English</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+               <option value="Other">Others</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Continuous Assessment (Test Score / 40)</label>
@@ -123,7 +130,13 @@
           </div>
           <div class="form-group">
             <label>Subject</label>
-            <input type="text" id="examSubject" placeholder="Mathematics" required />
+            <select id="matSubject" required>
+              <option value="Mathematics">Mathematics</option>
+              <option value="English">English</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Class Level</label>
@@ -204,18 +217,25 @@
           </div>
           <div class="form-group">
             <label>Subject</label>
-            <input type="text" id="matSubject" placeholder="Physics, Mathematics, English" required />
+            <select id="matSubject" required>
+              <option value="Mathematics">Mathematics</option>
+              <option value="English">English</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+               <option value="Other">Others</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Target Class Level</label>
-            <select id="classLevel" required>
-  <option value="JSS 1">JSS 1</option>
-  <option value="JSS 2">JSS 2</option>
-  <option value="JSS 3">JSS 3</option>
-  <option value="SSS 1">SSS 1</option>
-  <option value="SSS 2">SSS 2</option>
-  <option value="SSS 3">SSS 3</option>
-</select>
+            <select id="matClass" required>
+              <option value="JSS 1">JSS 1</option>
+              <option value="JSS 2">JSS 2</option>
+              <option value="JSS 3">JSS 3</option>
+              <option value="SSS 1">SSS 1</option>
+              <option value="SSS 2">SSS 2</option>
+              <option value="SSS 3">SSS 3</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Instructions / Note Overview</label>
@@ -264,8 +284,11 @@
     }
 
     function toggleDueDateField() {
-      const type = document.getElementById("matType").value;
-      document.getElementById("dueDateGroup").style.display = type === "assignment" ? "flex" : "none";
+      const typeEl = document.getElementById("matType");
+      const dueDateGroup = document.getElementById("dueDateGroup");
+      if (typeEl && dueDateGroup) {
+        dueDateGroup.style.display = typeEl.value === "assignment" ? "flex" : "none";
+      }
     }
 
     function showProgress(title) {
@@ -290,26 +313,29 @@
         });
         const data = await res.json();
         const select = document.getElementById("studentId");
+        if (!select) return;
+
         select.innerHTML = '<option value="">-- Select Student --</option>';
 
-        if (data.students) {
+        if (data.students && data.students.length > 0) {
           data.students.forEach(s => {
-            const name = s.users ? s.users.full_name : "Unknown Student";
+            const userObj = Array.isArray(s.users) ? s.users[0] : s.users;
+            const name = userObj ? userObj.full_name : "Unknown Student";
             select.innerHTML += `<option value="${s.id}">${name} (${s.reg_number || 'No Reg'} | ${s.serial_number || 'No Serial'}) - ${s.class_level}</option>`;
           });
         }
-      } catch (err) { console.error("Failed to load roster", err); }
+      } catch (err) { console.error("Failed to load student roster", err); }
     }
 
     async function handleResultUpload(e) {
       e.preventDefault();
       const payload = {
-        student_id: document.getElementById("studentId").value,
-        subject: document.getElementById("subject").value,
-        test_score: parseFloat(document.getElementById("testScore").value),
-        exam_score: parseFloat(document.getElementById("examScore").value),
-        term: document.getElementById("term").value,
-        session: document.getElementById("session").value
+        student_id: document.getElementById("studentId")?.value,
+        subject: document.getElementById("subject")?.value,
+        test_score: parseFloat(document.getElementById("testScore")?.value || 0),
+        exam_score: parseFloat(document.getElementById("examScore")?.value || 0),
+        term: document.getElementById("term")?.value,
+        session: document.getElementById("session")?.value
       };
 
       try {
@@ -320,7 +346,7 @@
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+        if (!res.ok) throw new Error(data.error || "Failed to upload grade.");
 
         alert("Academic grade saved!");
         document.getElementById("resultForm").reset();
@@ -329,13 +355,19 @@
 
     async function handleCreateExam(e) {
       e.preventDefault();
-      const payload = {
-        title: document.getElementById("examTitle").value,
-        subject: document.getElementById("examSubject").value,
-        class_level: document.getElementById("examClass").value,
-        duration_minutes: parseInt(document.getElementById("examDuration").value, 10),
-        type: document.getElementById("examType").value
-      };
+
+      const title = document.getElementById("examTitle")?.value;
+      const subject = document.getElementById("examSubject")?.value;
+      const class_level = document.getElementById("examClass")?.value;
+      const duration_minutes = parseInt(document.getElementById("examDuration")?.value || 20, 10);
+      const type = document.getElementById("examType")?.value;
+
+      if (!title || !subject || !class_level) {
+        alert("Please fill in all required exam fields.");
+        return;
+      }
+
+      const payload = { title, subject, class_level, duration_minutes, type };
 
       try {
         const res = await fetch(`${API_BASE}/exams/create`, {
@@ -345,24 +377,28 @@
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+        if (!res.ok) throw new Error(data.error || "Failed to create assessment.");
 
         alert(`Assessment Created! Exam ID: ${data.exam.id}`);
-        document.getElementById("qExamId").value = data.exam.id;
+
+        const qExamIdInput = document.getElementById("qExamId");
+        if (qExamIdInput) qExamIdInput.value = data.exam.id;
+
         document.getElementById("createExamForm").reset();
+        switchTab("addQuestionsTab");
       } catch (err) { alert(err.message); }
     }
 
     async function handleAddQuestion(e) {
       e.preventDefault();
-      const exam_id = document.getElementById("qExamId").value;
+      const exam_id = document.getElementById("qExamId")?.value;
       const question = {
-        question_text: document.getElementById("qText").value,
-        option_a: document.getElementById("qOptA").value,
-        option_b: document.getElementById("qOptB").value,
-        option_c: document.getElementById("qOptC").value,
-        option_d: document.getElementById("qOptD").value,
-        correct_option: document.getElementById("qCorrect").value
+        question_text: document.getElementById("qText")?.value,
+        option_a: document.getElementById("qOptA")?.value,
+        option_b: document.getElementById("qOptB")?.value,
+        option_c: document.getElementById("qOptC")?.value,
+        option_d: document.getElementById("qOptD")?.value,
+        correct_option: document.getElementById("qCorrect")?.value
       };
 
       try {
@@ -373,7 +409,7 @@
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+        if (!res.ok) throw new Error(data.error || "Failed to add question.");
 
         alert("Question added!");
         document.getElementById("qText").value = "";
@@ -388,8 +424,8 @@
       e.preventDefault();
 
       const fileInput = document.getElementById("matFileInput");
-      if (!fileInput.files || !fileInput.files[0]) {
-        alert("Please select a file.");
+      if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        alert("Please select a file to attach.");
         return;
       }
 
@@ -440,15 +476,16 @@
         showProgress("Saving document details...");
         updateProgress(95);
 
-        const rawDueDate = document.getElementById("matDueDate").value;
+        const dueDateInput = document.getElementById("matDueDate");
+        const rawDueDate = dueDateInput ? dueDateInput.value : null;
         const cleanDueDate = (rawDueDate && rawDueDate.trim() !== "") ? rawDueDate : null;
 
         const payload = {
-          title: document.getElementById("matTitle").value,
-          subject: document.getElementById("matSubject").value,
-          class_level: document.getElementById("matClass").value,
-          material_type: document.getElementById("matType").value,
-          description: document.getElementById("matDesc").value,
+          title: document.getElementById("matTitle")?.value,
+          subject: document.getElementById("matSubject")?.value,
+          class_level: document.getElementById("matClass")?.value,
+          material_type: document.getElementById("matType")?.value,
+          description: document.getElementById("matDesc")?.value,
           due_date: cleanDueDate,
           file_name: file.name,
           file_data: publicFileUrl
@@ -461,7 +498,7 @@
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+        if (!res.ok) throw new Error(data.error || "Failed to publish document.");
 
         updateProgress(100);
         setTimeout(() => {
