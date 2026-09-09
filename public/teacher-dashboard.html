@@ -42,11 +42,14 @@
 </head>
 <body>
 
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div>
       <div class="brand">
-        <img src="items/logo.png" alt="Logo" />
-        <h2>TBHS Teacher</h2>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="items/logo.png" alt="Logo" />
+          <h2>TBHS Teacher</h2>
+        </div>
+        <button class="mobile-nav-toggle" onclick="toggleMobileMenu()">☰</button>
       </div>
       <nav class="nav-links">
         <button class="nav-btn active" onclick="switchTab('resultsTab', event)">Upload Term Results</button>
@@ -277,11 +280,16 @@
     document.getElementById("teacherName").innerText = `Welcome, ${user.full_name || 'Teacher'}`;
     if (user.avatar_url) document.getElementById("teacherAvatar").src = user.avatar_url;
 
+    function toggleMobileMenu() {
+      document.getElementById("sidebar").classList.toggle("mobile-open");
+    }
+
     function switchTab(tabId, evt) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
       document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
       document.getElementById(tabId).classList.add("active");
       if (evt && evt.target) evt.target.classList.add("active");
+      document.getElementById("sidebar").classList.remove("mobile-open");
     }
 
     function toggleDueDateField() {

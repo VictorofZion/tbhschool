@@ -35,7 +35,7 @@
     .pay-btn { background-color: #09a5db; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
     .pay-btn:hover { background-color: #0782ad; }
     .card { background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 8px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; background: #ffffff; }
     th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
     th { background-color: #0a1931; color: #ffffff; }
     .btn-action { background-color: var(--accent-coral); color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; display: inline-block; cursor: pointer; border: none; }
@@ -49,11 +49,14 @@
 </head>
 <body>
 
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div>
       <div class="brand">
-        <img src="items/logo.png" alt="Logo" />
-        <h2>TBHS Portal</h2>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="items/logo.png" alt="Logo" />
+          <h2>TBHS Portal</h2>
+        </div>
+        <button class="mobile-nav-toggle" onclick="toggleMobileMenu()">☰</button>
       </div>
       <nav class="nav-links">
         <button class="nav-btn active" onclick="switchTab('overviewTab', event)">Overview &amp; Results</button>
@@ -84,36 +87,40 @@
       </div>
 
       <h2 style="font-family: 'Instrument Serif-Regular', serif; font-size: 28px; color: var(--primary-navy);">Academic Results</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Subject</th>
-            <th>Test (40)</th>
-            <th>Exam (60)</th>
-            <th>Total Score</th>
-            <th>Term</th>
-            <th>Session</th>
-          </tr>
-        </thead>
-        <tbody id="resultsTableBody"></tbody>
-      </table>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Test (40)</th>
+              <th>Exam (60)</th>
+              <th>Total Score</th>
+              <th>Term</th>
+              <th>Session</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- TAB 2: Online CBT Exams -->
     <section id="examsTab" class="tab-content">
       <h2 style="font-family: 'Instrument Serif-Regular', serif; font-size: 28px; color: var(--primary-navy); margin-top: 0;">Available CBT Examinations</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Exam Title</th>
-            <th>Subject</th>
-            <th>Class</th>
-            <th>Duration</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="examsTableBody"></tbody>
-      </table>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Exam Title</th>
+              <th>Subject</th>
+              <th>Class</th>
+              <th>Duration</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="examsTableBody"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- TAB 3: Class Assignments & Notes -->
@@ -169,11 +176,16 @@
       loadResults();
     });
 
+    function toggleMobileMenu() {
+      document.getElementById("sidebar").classList.toggle("mobile-open");
+    }
+
     function switchTab(tabId, evt) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
       document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
       document.getElementById(tabId).classList.add("active");
       if (evt && evt.target) evt.target.classList.add("active");
+      document.getElementById("sidebar").classList.remove("mobile-open");
 
       if (tabId === 'examsTab') loadExams();
       if (tabId === 'assignmentsTab') loadAssignments();
@@ -280,83 +292,76 @@
       } catch (err) { console.error("Failed to load materials", err); }
     }
 
-async function paySchoolFeesWithPaystack() {
-  try {
-    // 1. Fetch exact class fee and transaction reference from server
-    const res = await fetch(`${API_BASE}/payments/initiate`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json", 
-        "Authorization": `Bearer ${token}` 
-      },
-      body: JSON.stringify({ 
-        student_id: studentProfile.id,
-        payer_email: user.email 
-      })
-    });
+    async function paySchoolFeesWithPaystack() {
+      try {
+        const res = await fetch(`${API_BASE}/payments/initiate`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json", 
+            "Authorization": `Bearer ${token}` 
+          },
+          body: JSON.stringify({ 
+            student_id: studentProfile.id,
+            payer_email: user.email 
+          })
+        });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
 
-    // Confirm amount with user before opening checkout pop-up
-    const confirmPay = confirm(`School fee for ${data.classLevel} is ₦${data.nairaAmount.toLocaleString()}. Proceed to Paystack payment gateway?`);
-    if (!confirmPay) return;
+        const confirmPay = confirm(`School fee for ${data.classLevel} is ₦${data.nairaAmount.toLocaleString()}. Proceed to Paystack payment gateway?`);
+        if (!confirmPay) return;
 
-    // 2. Trigger Paystack Inline Popup
-    const handler = PaystackPop.setup({
-      key: data.paystackKey,
-      email: data.email,
-      amount: data.amount, // In Kobo
-      currency: "NGN",
-      ref: data.reference,
-      metadata: {
-        custom_fields: [
-          { display_name: "Student Name", variable_name: "student_name", value: user.full_name },
-          { display_name: "Class Level", variable_name: "class_level", value: data.classLevel }
-        ]
-      },
-      // Use standard synchronous function for Paystack SDK type checking
-      callback: function(response) {
-        (async () => {
-          try {
-            // Verify successful transaction with backend
-            const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
-              method: "POST",
-              headers: { 
-                "Content-Type": "application/json", 
-                "Authorization": `Bearer ${token}` 
-              },
-              body: JSON.stringify({ 
-                reference: response.reference, 
-                studentId: studentProfile.id 
-              })
-            });
+        const handler = PaystackPop.setup({
+          key: data.paystackKey,
+          email: data.email,
+          amount: data.amount,
+          currency: "NGN",
+          ref: data.reference,
+          metadata: {
+            custom_fields: [
+              { display_name: "Student Name", variable_name: "student_name", value: user.full_name },
+              { display_name: "Class Level", variable_name: "class_level", value: data.classLevel }
+            ]
+          },
+          callback: function(response) {
+            (async () => {
+              try {
+                const verifyRes = await fetch(`${API_BASE}/payments/verify`, {
+                  method: "POST",
+                  headers: { 
+                    "Content-Type": "application/json", 
+                    "Authorization": `Bearer ${token}` 
+                  },
+                  body: JSON.stringify({ 
+                    reference: response.reference, 
+                    studentId: studentProfile.id 
+                  })
+                });
 
-            const verifyData = await verifyRes.json();
-            if (!verifyRes.ok) throw new Error(verifyData.error || "Payment verification failed.");
+                const verifyData = await verifyRes.json();
+                if (!verifyRes.ok) throw new Error(verifyData.error || "Payment verification failed.");
 
-            alert("Payment Verified Successfully!");
-            
-            // Update local user object and refresh page
-            user.fee_status = 'PAID';
-            localStorage.setItem("tbhs_user", JSON.stringify(user));
-            location.reload();
-          } catch (err) {
-            alert(err.message);
+                alert("Payment Verified Successfully!");
+                user.fee_status = 'PAID';
+                localStorage.setItem("tbhs_user", JSON.stringify(user));
+                location.reload();
+              } catch (err) {
+                alert(err.message);
+              }
+            })();
+          },
+          onClose: function() {
+            alert("Payment window closed.");
           }
-        })();
-      },
-      onClose: function() {
-        alert("Payment window closed.");
+        });
+
+        handler.openIframe();
+
+      } catch (err) { 
+        alert(err.message); 
       }
-    });
-
-    handler.openIframe();
-
-  } catch (err) { 
-    alert(err.message); 
-  }
-}
+    }
 
     function downloadFileWithProgress(fileDataUrl, fileName) {
       if (fileDataUrl.startsWith("http")) {

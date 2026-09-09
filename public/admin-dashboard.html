@@ -32,8 +32,8 @@
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     label { font-size: 13px; font-weight: 600; }
     input, select { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; }
-    .btn-submit { background-color: var(--accent-coral); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 12px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    .btn-submit { background-color: var(--accent-coral); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 12px; width: 100%; }
+    table { width: 100%; border-collapse: collapse; }
     th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
     th { background-color: #f1ede4; color: var(--primary-navy); }
     .badge { padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; }
@@ -53,11 +53,14 @@
 </head>
 <body>
 
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div>
       <div class="brand">
-        <img src="items/logo.png" alt="Logo" />
-        <h2>TBHS Admin</h2>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="items/logo.png" alt="Logo" />
+          <h2>TBHS Admin</h2>
+        </div>
+        <button class="mobile-nav-toggle" onclick="toggleMobileMenu()">☰</button>
       </div>
       <nav class="nav-links">
         <button class="nav-btn active" onclick="switchTab('usersTab', event)">All Users</button>
@@ -88,21 +91,23 @@
             <option value="admin">Admins</option>
           </select>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Photo</th>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Reg / Serial No</th>
-              <th>Class</th>
-              <th>Fee Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="usersTableBody"></tbody>
-        </table>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Photo</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Reg / Serial No</th>
+                <th>Class</th>
+                <th>Fee Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -134,16 +139,18 @@
 
       <div class="card">
         <h3>Current Class Fee Amounts</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Class Level</th>
-              <th>Fee Amount (NGN)</th>
-              <th>Last Updated</th>
-            </tr>
-          </thead>
-          <tbody id="feesTableBody"></tbody>
-        </table>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Class Level</th>
+                <th>Fee Amount (NGN)</th>
+                <th>Last Updated</th>
+              </tr>
+            </thead>
+            <tbody id="feesTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -299,11 +306,16 @@
     document.getElementById("adminName").innerText = `Welcome, ${user.full_name || 'Admin'}`;
     if (user.avatar_url) document.getElementById("adminAvatar").src = user.avatar_url;
 
+    function toggleMobileMenu() {
+      document.getElementById("sidebar").classList.toggle("mobile-open");
+    }
+
     function switchTab(tabId, evt) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
       document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
       document.getElementById(tabId).classList.add("active");
       if (evt && evt.target) evt.target.classList.add("active");
+      document.getElementById("sidebar").classList.remove("mobile-open");
       if (tabId === 'usersTab') fetchUsers();
       if (tabId === 'feesTab') fetchClassFees();
     }
