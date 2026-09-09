@@ -64,6 +64,7 @@ const getExamsByClass = async (req, res) => {
 
     if (error) return res.status(400).json({ error: error.message });
 
+    // Look up primary student record ID
     const { data: student } = await supabase
       .from('students')
       .select('id')
@@ -135,12 +136,26 @@ const getExamQuestions = async (req, res) => {
   }
 };
 
-// Submit Exam Answers, Calculate Weighted Score, and Sync with Results Table
+// Submit Exam Answers, Scale Score & Mark Completion
 const submitExam = async (req, res) => {
-  const { exam_id, student_id, answers } = req.body;
+  const { exam_id, answers } = req.body;
+  const userId = req.user.id;
 
   try {
-    // 1. Fetch assessment meta details
+    // 1. Resolve student record ID from students table
+    const { data: student } = await supabase
+      .from('students')
+      .select('id, fee_status')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!student) {
+      return res.status(404).json({ error: 'Student profile record not found.' });
+    }
+
+    const student_id = student.id;
+
+    // 2. Fetch assessment details
     const { data: exam, error: examErr } = await supabase
       .from('exams')
       .select('id, type, subject, title')
@@ -151,20 +166,12 @@ const submitExam = async (req, res) => {
       return res.status(404).json({ error: 'Assessment record not found.' });
     }
 
-    // 2. Verify fee status for terminal exams
-    if (exam.type === 'exam') {
-      const { data: student } = await supabase
-        .from('students')
-        .select('fee_status')
-        .eq('id', student_id)
-        .maybeSingle();
-
-      if (!student || student.fee_status !== 'PAID') {
-        return res.status(403).json({ error: 'Cannot submit terminal examination without verified fee payment.' });
-      }
+    // 3. Fee verification for terminal exams
+    if (exam.type === 'exam' && student.fee_status !== 'PAID') {
+      return res.status(403).json({ error: 'Cannot submit terminal examination without verified fee payment.' });
     }
 
-    // 3. Fetch questions and grade choices
+    // 4. Fetch questions and grade choices
     const { data: questions } = await supabase
       .from('questions')
       .select('id, correct_option')
@@ -185,11 +192,11 @@ const submitExam = async (req, res) => {
       }
     });
 
-    // 4. Calculate proportional score based on assessment target weight
+    // 5. Calculate proportional weighted score (40m for test, 60m for exam)
     const weightLimit = exam.type === 'test' ? 40 : 60;
     const scaledScore = Math.round(((rawScore / totalQuestions) * weightLimit) * 10) / 10;
 
-    // 5. Store raw audit record in exam_submissions
+    // 6. Record completion entry in exam_submissions
     await supabase.from('exam_submissions').insert([{
       exam_id,
       student_id,
@@ -197,7 +204,7 @@ const submitExam = async (req, res) => {
       max_score: totalQuestions
     }]);
 
-    // 6. Sync scaled grade to student's academic results record
+    // 7. Sync scaled grade into results table
     const { data: existingResult } = await supabase
       .from('results')
       .select('id, test_score, exam_score')
