@@ -203,20 +203,21 @@ const submitExam = async (req, res) => {
     const scaledScore = Math.round(((rawScore / totalQuestions) * weightLimit) * 10) / 10;
 
     // 6. Explicitly record submission in exam_submissions
+   // 6. Explicitly record submission in exam_submissions
     const { error: subInsertErr } = await supabase
       .from('exam_submissions')
       .insert([{
         exam_id,
         student_id,
         score: rawScore,
-        max_score: totalQuestions
+        max_score: totalQuestions,
+        total_questions: totalQuestions
       }]);
 
     if (subInsertErr) {
       console.error("Failed to insert exam submission:", subInsertErr);
       return res.status(400).json({ error: `Submission failed: ${subInsertErr.message}` });
     }
-
     // 7. Sync scaled score into academic results record
     const { data: existingResult } = await supabase
       .from('results')
