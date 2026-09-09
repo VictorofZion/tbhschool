@@ -210,6 +210,8 @@ const submitExam = async (req, res) => {
         exam_id,
         student_id,
         score: rawScore,
+        raw_score: rawScore,
+        correct_count: rawScore,
         max_score: totalQuestions,
         total_questions: totalQuestions
       }]);
