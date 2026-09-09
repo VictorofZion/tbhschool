@@ -135,18 +135,24 @@ const getExamQuestions = async (req, res) => {
   }
 };
 
-// Submit Exam Answers & Evaluate Score
+// Submit Exam Answers, Evaluate Score, and Automatically Sync with Results Table
 const submitExam = async (req, res) => {
   const { exam_id, student_id, answers } = req.body;
 
   try {
-    const { data: exam } = await supabase
+    // 1. Fetch assessment meta details (subject & type)
+    const { data: exam, error: examErr } = await supabase
       .from('exams')
-      .select('type')
+      .select('id, type, subject, title')
       .eq('id', exam_id)
       .maybeSingle();
 
-    if (exam && exam.type === 'exam') {
+    if (examErr || !exam) {
+      return res.status(404).json({ error: 'Assessment record not found.' });
+    }
+
+    // 2. Secondary Fee verification guard for terminal examinations
+    if (exam.type === 'exam') {
       const { data: student } = await supabase
         .from('students')
         .select('fee_status')
@@ -158,6 +164,7 @@ const submitExam = async (req, res) => {
       }
     }
 
+    // 3. Fetch questions and evaluate student choices
     const { data: questions } = await supabase
       .from('questions')
       .select('id, correct_option')
@@ -175,6 +182,7 @@ const submitExam = async (req, res) => {
 
     const maxScore = (questions || []).length;
 
+    // 4. Record entry in exam_submissions table
     await supabase.from('exam_submissions').insert([{
       exam_id,
       student_id,
@@ -182,8 +190,44 @@ const submitExam = async (req, res) => {
       max_score: maxScore
     }]);
 
+    // 5. Sync calculated score to academic results record
+    const { data: existingResult } = await supabase
+      .from('results')
+      .select('id, test_score, exam_score')
+      .eq('student_id', student_id)
+      .eq('subject', exam.subject)
+      .maybeSingle();
+
+    if (existingResult) {
+      // Update existing grade row for this student and subject
+      const updatePayload = {};
+      if (exam.type === 'test') {
+        updatePayload.test_score = score;
+      } else {
+        updatePayload.exam_score = score;
+      }
+
+      await supabase
+        .from('results')
+        .update(updatePayload)
+        .eq('id', existingResult.id);
+    } else {
+      // Create new academic result row for this subject
+      await supabase
+        .from('results')
+        .insert([{
+          student_id,
+          subject: exam.subject,
+          test_score: exam.type === 'test' ? score : 0,
+          exam_score: exam.type === 'exam' ? score : 0,
+          term: '1st Term',
+          session: '2026/2027'
+        }]);
+    }
+
     return res.status(200).json({ success: true, score, maxScore });
   } catch (err) {
+    console.error("Submission processing error:", err);
     return res.status(500).json({ error: 'Failed to process exam evaluation.' });
   }
 };
