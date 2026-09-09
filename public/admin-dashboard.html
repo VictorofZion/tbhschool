@@ -23,8 +23,8 @@
     .nav-btn.active, .nav-btn:hover { background-color: var(--accent-coral); color: #ffffff; }
     .logout-btn { background-color: rgba(255,255,255,0.1); color: #ffffff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; }
     .main-content { flex: 1; padding: 40px; overflow-y: auto; }
-    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-    .header-bar h1 { font-family: 'Instrument Serif-Regular', serif; font-size: 36px; color: var(--primary-navy); margin: 0; }
+    .header-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+    .admin-avatar-header { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-coral); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .card { background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 24px; }
@@ -66,8 +66,11 @@
 
   <main class="main-content">
     <div class="header-bar">
-      <h1 id="tabTitle">User Management</h1>
-      <span id="adminName">Welcome, Admin</span>
+      <img id="adminAvatar" src="https://via.placeholder.com/150" class="admin-avatar-header" alt="Admin Avatar" />
+      <div>
+        <h1 id="tabTitle" style="font-family: 'Instrument Serif-Regular', serif; font-size: 36px; color: var(--primary-navy); margin: 0;">User Management</h1>
+        <span id="adminName" style="color: var(--accent-coral); font-weight: 600;">Welcome, Admin</span>
+      </div>
     </div>
 
     <!-- Tab 1: All Users -->
@@ -129,7 +132,7 @@
             </div>
             <div class="form-group student-field">
               <label>Registration Number</label>
-              <input type="text" id="regNumber" placeholder="TBHS/2026/001" />
+              <input type="text" id="regNumber" placeholder="TBH/2026/001" />
             </div>
             <div class="form-group student-field">
               <label>Unique Serial Number</label>
@@ -137,14 +140,14 @@
             </div>
             <div class="form-group student-field">
               <label>Class Level</label>
-              <select id="classLevel" required>
-  <option value="JSS 1">JSS 1</option>
-  <option value="JSS 2">JSS 2</option>
-  <option value="JSS 3">JSS 3</option>
-  <option value="SSS 1">SSS 1</option>
-  <option value="SSS 2">SSS 2</option>
-  <option value="SSS 3">SSS 3</option>
-</select>
+              <select id="classLevel">
+                <option value="JSS 1">JSS 1</option>
+                <option value="JSS 2">JSS 2</option>
+                <option value="JSS 3">JSS 3</option>
+                <option value="SSS 1">SSS 1</option>
+                <option value="SSS 2">SSS 2</option>
+                <option value="SSS 3">SSS 3</option>
+              </select>
             </div>
           </div>
           <button type="submit" class="btn-submit">Create Account</button>
@@ -189,14 +192,14 @@
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
             <label>Class Level</label>
-            <select id="classLevel" required>
-  <option value="JSS 1">JSS 1</option>
-  <option value="JSS 2">JSS 2</option>
-  <option value="JSS 3">JSS 3</option>
-  <option value="SSS 1">SSS 1</option>
-  <option value="SSS 2">SSS 2</option>
-  <option value="SSS 3">SSS 3</option>
-</select>
+            <select id="editClassLevel">
+              <option value="JSS 1">JSS 1</option>
+              <option value="JSS 2">JSS 2</option>
+              <option value="JSS 3">JSS 3</option>
+              <option value="SSS 1">SSS 1</option>
+              <option value="SSS 2">SSS 2</option>
+              <option value="SSS 3">SSS 3</option>
+            </select>
           </div>
         </div>
 
@@ -226,6 +229,7 @@
     if (!token || user.role !== "admin") window.location.href = "login.html";
 
     document.getElementById("adminName").innerText = `Welcome, ${user.full_name || 'Admin'}`;
+    if (user.avatar_url) document.getElementById("adminAvatar").src = user.avatar_url;
 
     function switchTab(tabId, evt) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
@@ -241,50 +245,45 @@
     }
 
     async function fetchUsers() {
-  const roleFilter = document.getElementById("roleFilter").value;
-  const url = `${API_BASE}/admin/users${roleFilter ? '?role=' + roleFilter : ''}`;
+      const roleFilter = document.getElementById("roleFilter").value;
+      const url = `${API_BASE}/admin/users${roleFilter ? '?role=' + roleFilter : ''}`;
 
-  try {
-    const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
-    const data = await res.json();
+      try {
+        const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load users.");
 
-    if (!res.ok) {
-      throw new Error(data.error || "Failed to load users from backend server.");
+        cachedUsers = data.users || [];
+        const tbody = document.getElementById("usersTableBody");
+        tbody.innerHTML = "";
+
+        if (cachedUsers.length > 0) {
+          cachedUsers.forEach(u => {
+            const avatar = u.avatar_url || 'https://via.placeholder.com/150';
+            const studentObj = Array.isArray(u.students) ? u.students[0] : (u.students || {});
+            const regOrSerial = u.role === 'student' ? `${studentObj.reg_number || 'N/A'} / ${studentObj.serial_number || 'N/A'}` : 'N/A';
+            const classLevel = u.role === 'student' ? (studentObj.class_level || 'N/A') : 'N/A';
+
+            tbody.innerHTML += `
+              <tr>
+                <td><img src="${avatar}" class="user-avatar" alt="Photo" /></td>
+                <td><strong>${u.full_name}</strong></td>
+                <td>${u.email}</td>
+                <td><strong>${u.role.toUpperCase()}</strong></td>
+                <td>${regOrSerial}</td>
+                <td>${classLevel}</td>
+                <td>
+                  <button class="btn-edit" onclick="openEditModal('${u.id}')">Edit</button>
+                  ${u.role !== 'admin' ? `<button class="btn-delete" onclick="deleteUser('${u.id}')">Delete</button>` : ''}
+                </td>
+              </tr>
+            `;
+          });
+        } else {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>`;
+        }
+      } catch (err) { alert(err.message); }
     }
-
-    cachedUsers = data.users || [];
-    const tbody = document.getElementById("usersTableBody");
-    tbody.innerHTML = "";
-
-    if (cachedUsers.length > 0) {
-      cachedUsers.forEach(u => {
-        const avatar = u.avatar_url || 'https://via.placeholder.com/150';
-        const student = (u.students && u.students[0]) ? u.students[0] : (u.students || {});
-        const regOrSerial = u.role === 'student' ? `${student.reg_number || 'N/A'} / ${student.serial_number || 'N/A'}` : 'N/A';
-        const classLevel = u.role === 'student' ? (student.class_level || 'N/A') : 'N/A';
-
-        tbody.innerHTML += `
-          <tr>
-            <td><img src="${avatar}" class="user-avatar" alt="Photo" /></td>
-            <td><strong>${u.full_name}</strong></td>
-            <td>${u.email}</td>
-            <td><strong>${u.role.toUpperCase()}</strong></td>
-            <td>${regOrSerial}</td>
-            <td>${classLevel}</td>
-            <td>
-              <button class="btn-edit" onclick="openEditModal('${u.id}')">Edit</button>
-              ${u.role !== 'admin' ? `<button class="btn-delete" onclick="deleteUser('${u.id}')">Delete</button>` : ''}
-            </td>
-          </tr>
-        `;
-      });
-    } else {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No users found in database.</td></tr>`;
-    }
-  } catch (err) {
-    alert(err.message);
-  }
-}
 
     function showProgress(title) {
       document.getElementById("progressTitle").innerText = title;
@@ -357,7 +356,7 @@
       const u = cachedUsers.find(item => item.id === userId);
       if (!u) return;
 
-      const student = (u.students && u.students[0]) ? u.students[0] : (u.students || {});
+      const studentObj = Array.isArray(u.students) ? u.students[0] : (u.students || {});
 
       document.getElementById("editUserId").value = u.id;
       document.getElementById("editRole").value = u.role;
@@ -368,9 +367,9 @@
       const studentBox = document.getElementById("editStudentFields");
       if (u.role === 'student') {
         studentBox.style.display = "block";
-        document.getElementById("editRegNumber").value = student.reg_number || '';
-        document.getElementById("editSerialNumber").value = student.serial_number || '';
-        document.getElementById("editClassLevel").value = student.class_level || '';
+        document.getElementById("editRegNumber").value = studentObj.reg_number || '';
+        document.getElementById("editSerialNumber").value = studentObj.serial_number || '';
+        document.getElementById("editClassLevel").value = studentObj.class_level || 'JSS 1';
       } else {
         studentBox.style.display = "none";
       }
@@ -398,9 +397,9 @@
         email: document.getElementById("editEmail").value,
         avatar_url,
         role,
-        reg_number: document.getElementById("editRegNumber").value,
-        serial_number: document.getElementById("editSerialNumber").value,
-        class_level: document.getElementById("editClassLevel").value
+        reg_number: document.getElementById("editRegNumber")?.value,
+        serial_number: document.getElementById("editSerialNumber")?.value,
+        class_level: document.getElementById("editClassLevel")?.value
       };
 
       try {
@@ -411,7 +410,7 @@
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+        if (!res.ok) throw new Error(data.error || "Failed to update profile.");
 
         alert("Profile updated successfully!");
         closeEditModal();

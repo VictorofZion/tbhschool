@@ -41,12 +41,15 @@ const getUsers = async (req, res) => {
 
 const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { full_name, email, role, class_level, reg_number, serial_number } = req.body;
+  const { full_name, email, role, avatar_url, class_level, reg_number, serial_number } = req.body;
 
   try {
+    const updateData = { full_name, email, role };
+    if (avatar_url) updateData.avatar_url = avatar_url;
+
     const { data: user, error: userError } = await supabase
       .from('users')
-      .update({ full_name, email, role })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -54,16 +57,37 @@ const updateUser = async (req, res) => {
     if (userError) return res.status(400).json({ error: userError.message });
 
     if (role === 'student') {
-      const { error: studentError } = await supabase
+      const { data: existingStudent } = await supabase
         .from('students')
-        .update({ class_level, reg_number, serial_number })
-        .eq('user_id', id);
+        .select('id')
+        .eq('user_id', id)
+        .maybeSingle();
 
-      if (studentError) return res.status(400).json({ error: studentError.message });
+      if (existingStudent) {
+        const { error: studentError } = await supabase
+          .from('students')
+          .update({ class_level, reg_number, serial_number })
+          .eq('user_id', id);
+
+        if (studentError) return res.status(400).json({ error: studentError.message });
+      } else {
+        const { error: studentError } = await supabase
+          .from('students')
+          .insert([{
+            user_id: id,
+            class_level: class_level || 'JSS 1',
+            reg_number: reg_number || 'N/A',
+            serial_number: serial_number || `SN-${Math.floor(100000 + Math.random() * 900000)}`,
+            fee_status: 'UNPAID'
+          }]);
+
+        if (studentError) return res.status(400).json({ error: studentError.message });
+      }
     }
 
     return res.status(200).json({ success: true, message: 'User updated successfully.', user });
   } catch (err) {
+    console.error("Update User Error:", err);
     return res.status(500).json({ error: 'Failed to update user record.' });
   }
 };
