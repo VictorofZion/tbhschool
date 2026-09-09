@@ -3,118 +3,173 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CBT Assessment - Tetotim Blessed Hope School</title>
+  <title>CBT Examination - Tetotim Blessed Hope School</title>
   <link rel="stylesheet" href="global.css" />
   <style>
-    body { margin: 0; font-family: 'Geist-Regular', sans-serif; background-color: #f9f6f0; color: #1c1c1c; padding: 20px; }
-    .exam-container { max-width: 700px; margin: 20px auto; background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e4dfd5; }
-    .exam-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e4dfd5; padding-bottom: 16px; margin-bottom: 20px; }
-    .timer { font-family: 'Geist-Bold', sans-serif; font-size: 20px; color: #e25b38; background: #fbe9e7; padding: 8px 16px; border-radius: 6px; }
-    .question-card { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #f0ece1; }
-    .question-title { font-weight: 600; font-size: 16px; margin-bottom: 12px; }
-    .options-list { display: flex; flex-direction: column; gap: 8px; }
-    .option-item { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
-    .submit-btn { background: #e25b38; color: #fff; border: none; padding: 14px 28px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; font-size: 16px; margin-top: 20px; }
+    :root {
+      --primary-navy: #0a1931;
+      --accent-coral: #e25b38;
+      --bg-cream: #f9f6f0;
+      --border-color: #e4dfd5;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Geist-Regular', sans-serif; background-color: var(--bg-cream); color: #1c1c1c; padding: 20px; }
+    .exam-container { max-width: 800px; margin: 0 auto; background: #ffffff; padding: 32px; border-radius: 12px; border: 1px solid var(--border-color); }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 16px; margin-bottom: 24px; }
+    .timer { font-family: 'Geist-Bold', sans-serif; font-size: 18px; color: var(--accent-coral); background: #fbe9e7; padding: 8px 16px; border-radius: 6px; }
+    .question-card { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+    .question-text { font-family: 'Geist-Bold', sans-serif; font-size: 16px; color: var(--primary-navy); margin-bottom: 12px; }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .option-label { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+    .option-label:hover { background: #f1ede4; }
+    .btn-submit { background-color: var(--accent-coral); color: white; border: none; padding: 14px 28px; border-radius: 6px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%; margin-top: 20px; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 25, 49, 0.85); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-card { background: #ffffff; padding: 32px; border-radius: 12px; text-align: center; max-width: 450px; width: 90%; }
   </style>
 </head>
 <body>
 
-<div class="exam-container">
-  <div class="exam-header">
-    <h2 style="margin:0; font-family: 'Instrument Serif-Regular', serif; color: #0a1931;">CBT Assessment</h2>
-    <div class="timer" id="timerDisplay">--:--</div>
+  <div class="exam-container">
+    <div class="header">
+      <div>
+        <h2 style="margin: 0; color: var(--primary-navy); font-family: 'Instrument Serif-Regular', serif; font-size: 28px;">Computer Based Test</h2>
+        <span id="studentTag" style="color: #6e7787; font-size: 14px;"></span>
+      </div>
+      <div class="timer" id="timerDisplay">Time Left: --:--</div>
+    </div>
+
+    <form id="examForm" onsubmit="handleExamSubmission(event)">
+      <div id="questionsContainer">Loading examination questions...</div>
+      <button type="submit" class="btn-submit" id="submitBtn">Submit Assessment</button>
+    </form>
   </div>
 
-  <form id="examForm" onsubmit="handleExamSubmit(event)">
-    <div id="questionsContainer">Loading examination questions...</div>
-    <button type="submit" class="submit-btn" id="submitBtn">Submit Assessment</button>
-  </form>
-</div>
+  <!-- Completion Modal -->
+  <div class="modal-overlay" id="resultModal">
+    <div class="modal-card">
+      <h2 style="font-family: 'Instrument Serif-Regular', serif; font-size: 32px; color: var(--primary-navy); margin-top: 0;">Assessment Completed!</h2>
+      <p id="scoreText" style="font-size: 18px; margin: 16px 0; color: #2e7d32; font-weight: 700;"></p>
+      <button onclick="returnToDashboard()" class="btn-submit" style="margin-top: 10px;">Return to Dashboard</button>
+    </div>
+  </div>
 
-<script>
-  const API_BASE = "/api";
-  const token = localStorage.getItem("tbhs_token");
-  const user = JSON.parse(localStorage.getItem("tbhs_user") || "{}");
-  const urlParams = new URLSearchParams(window.location.search);
-  const examId = urlParams.get("examId");
-  const durationMinutes = parseInt(urlParams.get("duration") || "20", 10);
+  <script>
+    const API_BASE = "/api";
+    const token = localStorage.getItem("tbhs_token");
+    const user = JSON.parse(localStorage.getItem("tbhs_user") || "{}");
+    const urlParams = new URLSearchParams(window.location.search);
+    const examId = urlParams.get("examId");
+    const durationMins = parseInt(urlParams.get("duration") || "20", 10);
 
-  let timerInterval;
+    let timerInterval = null;
+    let questionsList = [];
 
-  if (!token || !examId) window.location.href = "student-dashboard.html";
+    if (!token || !examId) {
+      window.location.href = "student-dashboard.html";
+    }
 
-  async function loadQuestions() {
-    try {
-      const res = await fetch(`${API_BASE}/exams/${examId}/questions`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+    document.getElementById("studentTag").innerText = `Candidate: ${user.full_name || 'Student'}`;
 
-      const container = document.getElementById("questionsContainer");
-      container.innerHTML = "";
+    async function fetchQuestions() {
+      try {
+        const res = await fetch(`${API_BASE}/exams/${examId}/questions`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load questions.");
 
-      if (data.questions && data.questions.length > 0) {
-        data.questions.forEach((q, idx) => {
+        questionsList = data.questions || [];
+        const container = document.getElementById("questionsContainer");
+        container.innerHTML = "";
+
+        if (questionsList.length === 0) {
+          container.innerHTML = "<p>No questions registered for this assessment shell.</p>";
+          document.getElementById("submitBtn").style.display = "none";
+          return;
+        }
+
+        questionsList.forEach((q, idx) => {
           container.innerHTML += `
             <div class="question-card">
-              <div class="question-title">Q${idx + 1}. ${q.question_text}</div>
-              <div class="options-list">
-                <label class="option-item"><input type="radio" name="q_${q.id}" value="A" required /> A) ${q.option_a}</label>
-                <label class="option-item"><input type="radio" name="q_${q.id}" value="B" /> B) ${q.option_b}</label>
-                <label class="option-item"><input type="radio" name="q_${q.id}" value="C" /> C) ${q.option_c}</label>
-                <label class="option-item"><input type="radio" name="q_${q.id}" value="D" /> D) ${q.option_d}</label>
+              <div class="question-text">Q${idx + 1}. ${q.question_text}</div>
+              <div class="options-grid">
+                <label class="option-label"><input type="radio" name="q_${q.id}" value="A" required /> A) ${q.option_a}</label>
+                <label class="option-label"><input type="radio" name="q_${q.id}" value="B" /> B) ${q.option_b}</label>
+                <label class="option-label"><input type="radio" name="q_${q.id}" value="C" /> C) ${q.option_c}</label>
+                <label class="option-label"><input type="radio" name="q_${q.id}" value="D" /> D) ${q.option_d}</label>
               </div>
             </div>
           `;
         });
-        startTimer(durationMinutes * 60);
-      } else {
-        container.innerHTML = "<p>No questions found for this exam.</p>";
+
+        startTimer(durationMins * 60);
+      } catch (err) {
+        alert(err.message);
+        window.location.href = "student-dashboard.html";
       }
-    } catch (err) { alert(err.message); }
-  }
+    }
 
-  function startTimer(secondsLeft) {
-    const timerDisplay = document.getElementById("timerDisplay");
-    timerInterval = setInterval(() => {
-      const mins = Math.floor(secondsLeft / 60);
-      const secs = secondsLeft % 60;
-      timerDisplay.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    function startTimer(secondsLeft) {
+      const display = document.getElementById("timerDisplay");
+      timerInterval = setInterval(() => {
+        const mins = Math.floor(secondsLeft / 60);
+        const secs = secondsLeft % 60;
+        display.innerText = `Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
-      if (secondsLeft <= 0) {
-        clearInterval(timerInterval);
-        alert("Time expired! Submitting your answers automatically.");
-        document.getElementById("examForm").requestSubmit();
-      }
-      secondsLeft--;
-    }, 1000);
-  }
+        if (secondsLeft <= 0) {
+          clearInterval(timerInterval);
+          alert("Time is up! Submitting your answers automatically.");
+          handleExamSubmission();
+        }
+        secondsLeft--;
+      }, 1000);
+    }
 
-  async function handleExamSubmit(e) {
-    e.preventDefault();
-    clearInterval(timerInterval);
-    const formData = new FormData(document.getElementById("examForm"));
-    const answers = [];
+    async function handleExamSubmission(e) {
+      if (e) e.preventDefault();
+      clearInterval(timerInterval);
 
-    formData.forEach((value, key) => {
-      answers.push({ question_id: key.replace("q_", ""), selected_option: value });
-    });
-
-    try {
-      const res = await fetch(`${API_BASE}/exams/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ exam_id: examId, student_id: user.student_id || user.id, answers })
+      const answers = questionsList.map(q => {
+        const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
+        return {
+          question_id: q.id,
+          selected_option: selected ? selected.value : ""
+        };
       });
-      if (!res.ok) throw new Error("Submission failed");
 
-      alert("Assessment submitted successfully!");
+      const studentId = user.student_id || user.id;
+
+      try {
+        const res = await fetch(`${API_BASE}/exams/submit`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            exam_id: examId,
+            student_id: studentId,
+            answers
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Submission failed.");
+
+        document.getElementById("scoreText").innerText = `Your Score: ${data.score} / ${data.maxScore}`;
+        document.getElementById("resultModal").style.display = "flex";
+
+      } catch (err) {
+        alert(err.message);
+        window.location.href = "student-dashboard.html";
+      }
+    }
+
+    function returnToDashboard() {
       window.location.href = "student-dashboard.html";
-    } catch (err) { alert(err.message); }
-  }
+    }
 
-  loadQuestions();
-</script>
+    fetchQuestions();
+  </script>
 </body>
 </html>

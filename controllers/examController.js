@@ -1,5 +1,6 @@
 const supabase = require('../config/db');
 
+// 1. Create CBT Exam/Test Shell
 const createExam = async (req, res) => {
   const { title, subject, class_level, duration_minutes, type } = req.body;
 
@@ -22,6 +23,7 @@ const createExam = async (req, res) => {
   }
 };
 
+// 2. Add Questions to an Existing Exam
 const addQuestions = async (req, res) => {
   const { exam_id, questions } = req.body;
 
@@ -53,11 +55,22 @@ const addQuestions = async (req, res) => {
   }
 };
 
+// 3. Get Available Exams for Class with Real-time Completion Check
 const getExamsByClass = async (req, res) => {
   const { classLevel } = req.params;
-  const studentId = req.user.student_id || req.user.id;
+  const userId = req.user.id;
 
   try {
+    // Resolve both student profile ID and user account ID
+    const { data: studentRecord } = await supabase
+      .from('students')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    const studentTableId = studentRecord ? studentRecord.id : userId;
+
+    // Fetch exams matching class level
     const { data: exams, error } = await supabase
       .from('exams')
       .select('*')
@@ -65,14 +78,16 @@ const getExamsByClass = async (req, res) => {
 
     if (error) return res.status(400).json({ error: error.message });
 
+    // Fetch existing submissions matching either student profile ID or account user ID
     const { data: submissions } = await supabase
       .from('exam_submissions')
       .select('exam_id')
-      .eq('student_id', studentId);
+      .or(`student_id.eq.${studentTableId},student_id.eq.${userId}`);
 
     const completedExamIds = new Set((submissions || []).map(s => s.exam_id));
 
-    const enrichedExams = exams.map(e => ({
+    // Mark completion status on each assessment
+    const enrichedExams = (exams || []).map(e => ({
       ...e,
       is_completed: completedExamIds.has(e.id)
     }));
@@ -83,6 +98,7 @@ const getExamsByClass = async (req, res) => {
   }
 };
 
+// 4. Get Questions for a Specific Exam ID
 const getExamQuestions = async (req, res) => {
   const { examId } = req.params;
 
@@ -100,6 +116,7 @@ const getExamQuestions = async (req, res) => {
   }
 };
 
+// 5. Auto-Grade & Record Exam Submission
 const submitExam = async (req, res) => {
   const { exam_id, student_id, answers } = req.body;
 
@@ -108,6 +125,7 @@ const submitExam = async (req, res) => {
   }
 
   try {
+    // Check if student has already attempted this exam
     const { data: existingSubmission } = await supabase
       .from('exam_submissions')
       .select('id')
@@ -119,6 +137,7 @@ const submitExam = async (req, res) => {
       return res.status(400).json({ error: 'You have already completed this assessment. Only one attempt is allowed.' });
     }
 
+    // Fetch exam configuration
     const { data: exam, error: examErr } = await supabase
       .from('exams')
       .select('*')
@@ -127,6 +146,7 @@ const submitExam = async (req, res) => {
 
     if (examErr || !exam) return res.status(404).json({ error: 'Exam configuration not found.' });
 
+    // Fetch correct question answers
     const { data: questions, error: qErr } = await supabase
       .from('questions')
       .select('id, correct_option')
@@ -136,6 +156,7 @@ const submitExam = async (req, res) => {
       return res.status(400).json({ error: 'No questions registered for this exam.' });
     }
 
+    // Calculate score
     let correctCount = 0;
     const answerMap = new Map(answers.map(a => [String(a.question_id), String(a.selected_option).trim().toUpperCase()]));
 
@@ -150,6 +171,7 @@ const submitExam = async (req, res) => {
     const maxScore = exam.type === 'test' ? 40 : 60;
     const finalScore = parseFloat(((correctCount / totalQuestions) * maxScore).toFixed(1));
 
+    // Record submission to lock out future attempts
     const { error: subErr } = await supabase
       .from('exam_submissions')
       .insert([{
@@ -162,6 +184,7 @@ const submitExam = async (req, res) => {
 
     if (subErr) return res.status(400).json({ error: subErr.message });
 
+    // Post to results table for term transcripts
     await supabase.from('results').insert([{
       student_id,
       subject: exam.subject,
