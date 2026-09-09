@@ -38,7 +38,7 @@ const getUsers = async (req, res) => {
 
 const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { full_name, email, role, avatar_url, class_level, reg_number, serial_number, date_of_birth } = req.body;
+  const { full_name, email, role, avatar_url, class_level, reg_number, serial_number, date_of_birth, fee_status } = req.body;
 
   try {
     const updateData = { full_name, email, role };
@@ -65,7 +65,13 @@ const updateUser = async (req, res) => {
       if (existingStudent) {
         const { error: studentError } = await supabase
           .from('students')
-          .update({ class_level, reg_number, serial_number, date_of_birth: cleanDOB })
+          .update({
+            class_level,
+            reg_number,
+            serial_number,
+            date_of_birth: cleanDOB,
+            fee_status: fee_status || 'UNPAID'
+          })
           .eq('user_id', id);
 
         if (studentError) return res.status(400).json({ error: studentError.message });
@@ -78,7 +84,7 @@ const updateUser = async (req, res) => {
             reg_number: reg_number || 'N/A',
             serial_number: serial_number || `SN-${Math.floor(100000 + Math.random() * 900000)}`,
             date_of_birth: cleanDOB,
-            fee_status: 'UNPAID'
+            fee_status: fee_status || 'UNPAID'
           }]);
 
         if (studentError) return res.status(400).json({ error: studentError.message });
@@ -104,9 +110,50 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Fetch Class Fee Table
+const getClassFees = async (req, res) => {
+  try {
+    const { data: fees, error } = await supabase
+      .from('class_fees')
+      .select('*')
+      .order('class_level');
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    return res.status(200).json({ success: true, fees: fees || [] });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch class fee list.' });
+  }
+};
+
+// Update Fee Amount for a Specific Class
+const updateClassFee = async (req, res) => {
+  const { class_level, amount } = req.body;
+
+  if (!class_level || amount === undefined) {
+    return res.status(400).json({ error: 'Class level and fee amount are required.' });
+  }
+
+  try {
+    const { data: fee, error } = await supabase
+      .from('class_fees')
+      .upsert({ class_level, amount: parseFloat(amount), updated_at: new Date() })
+      .select()
+      .single();
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    return res.status(200).json({ success: true, message: 'Class fee updated successfully.', fee });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to update class fee.' });
+  }
+};
+
 module.exports = {
   getDashboard,
   getUsers,
   updateUser,
-  deleteUser
+  deleteUser,
+  getClassFees,
+  updateClassFee
 };
