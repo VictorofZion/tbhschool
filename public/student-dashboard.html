@@ -11,7 +11,15 @@
   <link rel="stylesheet" href="global.css" />
   <!-- Paystack Inline JS SDK -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
-  
+
+  <script>// Add or verify this initialization block inside the script tag of student-dashboard.html
+document.addEventListener("DOMContentLoaded", async () => {
+  if (typeof fetchStudentProfile === "function") {
+    await fetchStudentProfile(); // Ensure student profile finishes loading first
+  }
+  await loadResults(); // Fetch and render academic results
+});
+  </script>
   <style>
     :root {
       --primary-navy: #0a1931;
