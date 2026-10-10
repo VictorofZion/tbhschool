@@ -195,19 +195,29 @@
       if (tabId === 'assignmentsTab') loadAssignments();
     }
 
-  async function loadResults() {
+ async function loadResults() {
   try {
     const tbody = document.getElementById("resultsTableBody");
     if (!tbody) return;
 
     tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Loading academic results...</td></tr>`;
 
-    // Fetch student academic results
-    const res = await fetch(`${API_BASE}/results/student/${studentProfile.id}`, {
+    // Determine candidate ID (prefer studentProfile.id, fallback to user.id)
+    const targetId = (typeof studentProfile !== 'undefined' && studentProfile && studentProfile.id) 
+      ? studentProfile.id 
+      : user.id;
+
+    // Correct API endpoint: /api/academic/results/student/:id
+    const res = await fetch(`${API_BASE}/academic/results/student/${targetId}`, {
       headers: {
         "Authorization": `Bearer ${token}`
       }
     });
+
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error(`Server returned non-JSON response (${res.status}). Check backend routes.`);
+    }
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to fetch academic results.");
@@ -216,7 +226,6 @@
 
     if (data.results && data.results.length > 0) {
       data.results.forEach(r => {
-        // Fallback checks for legacy records
         const test1 = parseFloat(r.test1_score || r.test_score || 0);
         const test2 = parseFloat(r.test2_score || 0);
         const exam = parseFloat(r.exam_score || 0);
@@ -248,7 +257,7 @@
       tbody.innerHTML = `
         <tr>
           <td colspan="5" style="text-align: center; color: #e53935;">
-            Failed to load academic results. ${err.message}
+            Failed to load academic results: ${err.message}
           </td>
         </tr>
       `;
