@@ -5,8 +5,9 @@ const { getResultsByStudent, uploadResult, getStudentsList } = require('../contr
 
 router.use(authenticateUser);
 
-router.get('/results/:studentId', getResultsByStudent);
+router.get('/results/student/:studentId', getStudentResults);
 router.post('/results', uploadResult);
 router.get('/students-list', getStudentsList);
 
 module.exports = router;
+
