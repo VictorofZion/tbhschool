@@ -16,6 +16,7 @@ const getStudentsList = async (req, res) => {
 };
 
 // Fetch results for a student (resolves both students.id and users.id)
+// Fetch results for a student (resolves both students.id and users.id)
 const getResultsByStudent = async (req, res) => {
   const { studentId } = req.params;
 
@@ -37,8 +38,7 @@ const getResultsByStudent = async (req, res) => {
     const { data: results, error } = await supabase
       .from('results')
       .select('*')
-      .in('student_id', candidateIds)
-      .order('created_at', { ascending: false });
+      .in('student_id', candidateIds);
 
     if (error) return res.status(400).json({ error: error.message });
 
@@ -48,7 +48,6 @@ const getResultsByStudent = async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch academic results.' });
   }
 };
-
 // Upload or Update student grade record
 const uploadResult = async (req, res) => {
   const { 
