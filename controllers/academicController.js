@@ -1,6 +1,6 @@
 const supabase = require('../config/db');
 
-// Fetch student list for teacher drop-down rosters
+// Fetch student roster for teacher drop-downs
 const getStudentsList = async (req, res) => {
   try {
     const { data: students, error } = await supabase
@@ -15,26 +15,29 @@ const getStudentsList = async (req, res) => {
   }
 };
 
-// Fetch all results for a student (resolves both students.id and users.id)
+// Fetch results for a student (resolves both students.id and users.id)
 const getResultsByStudent = async (req, res) => {
   const { studentId } = req.params;
 
   try {
-    // 1. Resolve student DB primary key and user account UUID
+    // 1. Gather all possible IDs linked to this student
     const { data: student } = await supabase
       .from('students')
       .select('id, user_id')
       .or(`id.eq.${studentId},user_id.eq.${studentId}`)
       .maybeSingle();
 
-    const studentDbId = student ? student.id : studentId;
-    const userDbId = student ? student.user_id : studentId;
+    const candidateIds = [studentId];
+    if (student) {
+      if (student.id) candidateIds.push(student.id);
+      if (student.user_id) candidateIds.push(student.user_id);
+    }
 
-    // 2. Query results matching any of the candidate IDs
+    // 2. Query results matching any candidate ID
     const { data: results, error } = await supabase
       .from('results')
       .select('*')
-      .or(`student_id.eq.${studentDbId},student_id.eq.${userDbId},student_id.eq.${studentId}`)
+      .in('student_id', candidateIds)
       .order('created_at', { ascending: false });
 
     if (error) return res.status(400).json({ error: error.message });
@@ -73,13 +76,12 @@ const uploadResult = async (req, res) => {
       .maybeSingle();
 
     if (existing) {
-      // Update existing result entry
       const { data: updated, error } = await supabase
         .from('results')
         .update({
           test1_score: parsedTest1,
           test2_score: parsedTest2,
-          test_score: parsedTest1, // legacy support
+          test_score: parsedTest1,
           exam_score: parsedExam,
           term: term || '1st Term',
           session: session || '2026/2027'
@@ -91,7 +93,6 @@ const uploadResult = async (req, res) => {
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ success: true, result: updated });
     } else {
-      // Insert new result entry
       const { data: inserted, error } = await supabase
         .from('results')
         .insert([{
@@ -99,7 +100,7 @@ const uploadResult = async (req, res) => {
           subject,
           test1_score: parsedTest1,
           test2_score: parsedTest2,
-          test_score: parsedTest1, // legacy support
+          test_score: parsedTest1,
           exam_score: parsedExam,
           term: term || '1st Term',
           session: session || '2026/2027'
