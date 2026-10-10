@@ -1,5 +1,6 @@
 const supabase = require('../config/db');
 
+// Fetch student list for teacher drop-down rosters
 const getStudentsList = async (req, res) => {
   try {
     const { data: students, error } = await supabase
@@ -14,28 +15,109 @@ const getStudentsList = async (req, res) => {
   }
 };
 
+// Fetch all results for a student (resolves both students.id and users.id)
+const getResultsByStudent = async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    // 1. Resolve student DB primary key and user account UUID
+    const { data: student } = await supabase
+      .from('students')
+      .select('id, user_id')
+      .or(`id.eq.${studentId},user_id.eq.${studentId}`)
+      .maybeSingle();
+
+    const studentDbId = student ? student.id : studentId;
+    const userDbId = student ? student.user_id : studentId;
+
+    // 2. Query results matching any of the candidate IDs
+    const { data: results, error } = await supabase
+      .from('results')
+      .select('*')
+      .or(`student_id.eq.${studentDbId},student_id.eq.${userDbId},student_id.eq.${studentId}`)
+      .order('created_at', { ascending: false });
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    return res.status(200).json({ success: true, results: results || [] });
+  } catch (err) {
+    console.error("Error fetching student results:", err);
+    return res.status(500).json({ error: 'Failed to fetch academic results.' });
+  }
+};
+
+// Upload or Update student grade record
+const uploadResult = async (req, res) => {
+  const { 
+    student_id, 
+    subject, 
+    test1_score, 
+    test2_score, 
+    test_score, 
+    exam_score, 
+    term, 
+    session 
+  } = req.body;
+
+  try {
+    const parsedTest1 = parseFloat(test1_score !== undefined ? test1_score : (test_score || 0)) || 0;
+    const parsedTest2 = parseFloat(test2_score) || 0;
+    const parsedExam = parseFloat(exam_score) || 0;
+
+    // Check if result record already exists for this student and subject
+    const { data: existing } = await supabase
+      .from('results')
+      .select('id')
+      .eq('student_id', student_id)
+      .eq('subject', subject)
+      .maybeSingle();
+
+    if (existing) {
+      // Update existing result entry
+      const { data: updated, error } = await supabase
+        .from('results')
+        .update({
+          test1_score: parsedTest1,
+          test2_score: parsedTest2,
+          test_score: parsedTest1, // legacy support
+          exam_score: parsedExam,
+          term: term || '1st Term',
+          session: session || '2026/2027'
+        })
+        .eq('id', existing.id)
+        .select()
+        .single();
+
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ success: true, result: updated });
+    } else {
+      // Insert new result entry
+      const { data: inserted, error } = await supabase
+        .from('results')
+        .insert([{
+          student_id,
+          subject,
+          test1_score: parsedTest1,
+          test2_score: parsedTest2,
+          test_score: parsedTest1, // legacy support
+          exam_score: parsedExam,
+          term: term || '1st Term',
+          session: session || '2026/2027'
+        }])
+        .select()
+        .single();
+
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(201).json({ success: true, result: inserted });
+    }
+  } catch (err) {
+    console.error("Upload error:", err);
+    return res.status(500).json({ error: 'Failed to upload student grade.' });
+  }
+};
+
 module.exports = {
   getStudentsList,
-  getResultsByStudent: async (req, res) => {
-    const { studentId } = req.params;
-    try {
-      const { data: results, error } = await supabase.from('results').select('*').eq('student_id', studentId);
-      if (error) return res.status(400).json({ error: error.message });
-      return res.status(200).json({ success: true, results: results || [] });
-    } catch (err) {
-      return res.status(500).json({ error: 'Failed to fetch academic results.' });
-    }
-  },
-  uploadResult: async (req, res) => {
-    const { student_id, subject, test_score, exam_score, term, session } = req.body;
-    try {
-      const { data: result, error } = await supabase.from('results').insert([{
-        student_id, subject, test_score: parseFloat(test_score) || 0, exam_score: parseFloat(exam_score) || 0, term: term || '1st Term', session: session || '2026/2027'
-      }]).select().single();
-      if (error) return res.status(400).json({ error: error.message });
-      return res.status(201).json({ success: true, result });
-    } catch (err) {
-      return res.status(500).json({ error: 'Failed to upload student grade.' });
-    }
-  }
+  getResultsByStudent,
+  uploadResult
 };
