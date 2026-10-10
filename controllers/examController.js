@@ -145,6 +145,7 @@ const getExamQuestions = async (req, res) => {
 };
 
 // Submit Exam Answers, Record Submission & Sync Scaled Score
+// Submit Exam Answers, Scale Score to 20/20/60 Target Weights & Sync Results
 const submitExam = async (req, res) => {
   const { exam_id, answers } = req.body;
   const userId = req.user.id;
@@ -175,7 +176,7 @@ const submitExam = async (req, res) => {
       return res.status(403).json({ error: 'Cannot submit terminal examination without verified fee payment.' });
     }
 
-    // 4. Fetch questions and grade choices
+    // 4. Fetch questions and evaluate correct answers
     const { data: questions, error: qErr } = await supabase
       .from('questions')
       .select('id, correct_option')
@@ -198,12 +199,17 @@ const submitExam = async (req, res) => {
       }
     });
 
-    // 5. Calculate scaled score (40m for test, 60m for exam)
-    const weightLimit = exam.type === 'test' ? 40 : 60;
+    // 5. Determine target weight limit (20 for Test 1 & Test 2, 60 for Terminal Exam)
+    let weightLimit = 20;
+    if (exam.type === 'exam') {
+      weightLimit = 60;
+    } else if (exam.type === 'test') { // Legacy test fallback
+      weightLimit = 40;
+    }
+
     const scaledScore = Math.round(((rawScore / totalQuestions) * weightLimit) * 10) / 10;
 
-    // 6. Explicitly record submission in exam_submissions
-  // 6. Explicitly record submission in exam_submissions
+    // 6. Record completion audit in exam_submissions
     const { error: subInsertErr } = await supabase
       .from('exam_submissions')
       .insert([{
@@ -219,19 +225,23 @@ const submitExam = async (req, res) => {
       console.error("Failed to insert exam submission:", subInsertErr);
       return res.status(400).json({ error: `Submission failed: ${subInsertErr.message}` });
     }
-    // 7. Sync scaled score into academic results record
+
+    // 7. Sync scaled score into results table
     const { data: existingResult } = await supabase
       .from('results')
-      .select('id, test_score, exam_score')
+      .select('id, test1_score, test2_score, test_score, exam_score')
       .eq('student_id', student_id)
       .eq('subject', exam.subject)
       .maybeSingle();
 
     if (existingResult) {
       const updatePayload = {};
-      if (exam.type === 'test') {
-        updatePayload.test_score = scaledScore;
-      } else {
+      if (exam.type === 'test1' || exam.type === 'test') {
+        updatePayload.test1_score = scaledScore;
+        updatePayload.test_score = scaledScore; // backward compatibility
+      } else if (exam.type === 'test2') {
+        updatePayload.test2_score = scaledScore;
+      } else if (exam.type === 'exam') {
         updatePayload.exam_score = scaledScore;
       }
 
@@ -242,16 +252,20 @@ const submitExam = async (req, res) => {
 
       if (resUpdateErr) console.error("Result update error:", resUpdateErr);
     } else {
+      const insertPayload = {
+        student_id,
+        subject: exam.subject,
+        test1_score: exam.type === 'test1' || exam.type === 'test' ? scaledScore : 0,
+        test2_score: exam.type === 'test2' ? scaledScore : 0,
+        test_score: exam.type === 'test1' || exam.type === 'test' ? scaledScore : 0,
+        exam_score: exam.type === 'exam' ? scaledScore : 0,
+        term: '1st Term',
+        session: '2026/2027'
+      };
+
       const { error: resInsertErr } = await supabase
         .from('results')
-        .insert([{
-          student_id,
-          subject: exam.subject,
-          test_score: exam.type === 'test' ? scaledScore : 0,
-          exam_score: exam.type === 'exam' ? scaledScore : 0,
-          term: '1st Term',
-          session: '2026/2027'
-        }]);
+        .insert([insertPayload]);
 
       if (resInsertErr) console.error("Result insert error:", resInsertErr);
     }
