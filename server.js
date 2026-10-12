@@ -11,6 +11,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 const publicPath = path.join(process.cwd(), 'public');
 app.use(express.static(publicPath));
+app.use('/api/gallery', require('./routes/galleryRoutes'));
 
 app.get('/', (req, res) => res.sendFile(path.join(publicPath, 'index.html')));
 
