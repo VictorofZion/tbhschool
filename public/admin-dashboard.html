@@ -222,6 +222,37 @@
         </form>
       </div>
     </section>
+
+    <!-- Gallery Upload Section -->
+<section id="galleryUploadTab" class="tab-content">
+  <div class="card">
+    <h3 style="font-family: 'Instrument Serif-Regular', serif; font-size: 24px; color: var(--primary-navy); margin-top: 0;">Upload Activity Photo</h3>
+    <form id="galleryForm" onsubmit="handleGalleryUpload(event)">
+      <div class="form-group">
+        <label>Photo Title / Caption</label>
+        <input type="text" id="galTitle" placeholder="e.g., Annual Sports Day 100m Race" required />
+      </div>
+      
+      <div class="form-group">
+        <label>Activity Section</label>
+        <select id="galSection" required>
+          <option value="sports">Sports & Athletics</option>
+          <option value="cultural">Cultural Day</option>
+          <option value="academic">Science & Academics</option>
+          <option value="graduation">Graduation & Ceremonies</option>
+          <option value="other">Other Activities</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Select Image File (.jpg, .jpeg, .png, .webp)</label>
+        <input type="file" id="galFileInput" accept="image/*" required />
+      </div>
+
+      <button type="submit" class="btn-submit">Upload Photo to Gallery</button>
+    </form>
+  </div>
+</section>
   </main>
 
   <!-- Edit User Modal -->
@@ -571,6 +602,97 @@
         fetchUsers();
       } catch (err) { alert(err.message); }
     }
+
+    async function handleGalleryUpload(e) {
+  e.preventDefault();
+
+  const fileInput = document.getElementById("galFileInput");
+  if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+    alert("Please select an image file to upload.");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const fileExt = file.name.split('.').pop().toLowerCase();
+  const cleanBaseName = file.name.replace(/\.[^/.]+\$/, "").replace(/[^a-zA-Z0-9]/g, "_");
+  const filePath = `${Date.now()}_${cleanBaseName}.${fileExt}`;
+
+  // Supabase project credentials
+  const SUPABASE_URL = "https://stlgpydccimcyvfnwqkh.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bGdweWRjY2ltY3l2Zm53cWtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MzI5NDUsImV4cCI6MjEwMzEwODk0NX0.NBPzbxNl4m-AU4Z5MimxeuGLk00pwJh0X5vFGc-xs1g";
+
+  try {
+    showProgress("Uploading image to gallery storage...");
+
+    // 1. Upload file directly to Supabase Storage
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/gallery/${filePath}`);
+
+      xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
+      xhr.setRequestHeader("Authorization", `Bearer ${SUPABASE_ANON_KEY}`);
+      xhr.setRequestHeader("x-upsert", "true");
+      xhr.setRequestHeader("Content-Type", file.type || "image/jpeg");
+
+      xhr.upload.onprogress = (evt) => {
+        if (evt.lengthComputable) {
+          updateProgress(Math.round((evt.loaded / evt.total) * 90));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          try {
+            reject(new Error(JSON.parse(xhr.responseText).message || "Storage upload failed."));
+          } catch {
+            reject(new Error("Storage upload failed."));
+          }
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during file upload."));
+      xhr.send(file);
+    });
+
+    // 2. Generate public CDN URL
+    const publicImageUrl = `${SUPABASE_URL}/storage/v1/object/public/gallery/${filePath}`;
+
+    showProgress("Saving photo record...");
+    updateProgress(95);
+
+    // 3. Post record metadata to backend API
+    const payload = {
+      title: document.getElementById("galTitle")?.value,
+      activity_section: document.getElementById("galSection")?.value,
+      image_url: publicImageUrl
+    };
+
+    const res = await fetch(`${API_BASE}/gallery/upload`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save gallery photo.");
+
+    updateProgress(100);
+    setTimeout(() => {
+      hideProgress();
+      alert("Photo uploaded successfully to gallery!");
+      document.getElementById("galleryForm").reset();
+    }, 300);
+
+  } catch (err) {
+    hideProgress();
+    alert(err.message);
+  }
+}
 
     function logout() {
       localStorage.clear();
