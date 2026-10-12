@@ -1,6 +1,4 @@
-
 {
-  "cleanUrls": true,
   "version": 2,
   "builds": [
     {
@@ -13,8 +11,5 @@
       "src": "/(.*)",
       "dest": "server.js"
     }
-  ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
 }
