@@ -10,33 +10,10 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 const publicPath = path.join(process.cwd(), 'public');
-const path = require('path');
-
-// Serve static frontend files with automatic .html extension resolution
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html', 'htm'] }));
+app.use(express.static(publicPath));
 app.use('/api/gallery', require('./routes/galleryRoutes'));
 
 app.get('/', (req, res) => res.sendFile(path.join(publicPath, 'index.html')));
-// Clean HTML page routes
-app.get('/gallery', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'gallery.html'));
-});
-
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-app.get('/admin-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin-dashboard.html'));
-});
-
-app.get('/student-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'student-dashboard.html'));
-});
-
-app.get('/teacher-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'teacher-dashboard.html'));
-});
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
