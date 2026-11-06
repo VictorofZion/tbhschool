@@ -41,8 +41,12 @@ router.get('/students', authenticateUser, getStudentsList);
 router.get('/student/:studentId', authenticateUser, getResultsByStudent);
 
 // Teacher and Admin grade upload / edit routes
-router.post('/upload', authenticateUser, authorizeRoles('admin', 'teacher'), uploadResult);
-router.put('/result/:resultId', authenticateUser, authorizeRoles('admin', 'teacher'), updateResultScore);
-router.delete('/result/:resultId', authenticateUser, authorizeRoles('chief_admin', 'admin'), deleteResultScore);
+// routes/academicRoutes.js
+// 'teacher' minimum requirement -> Admins and Chief Admins are automatically allowed
+router.post('/upload', authenticateUser, authorizeRoles('teacher'), uploadResult);
+router.put('/result/:resultId', authenticateUser, authorizeRoles('teacher'), updateResultScore);
+
+// Exclusive action -> Only Admins & Chief Admins
+router.delete('/result/:resultId', authenticateUser, authorizeRoles('admin'), deleteResultScore);
 
 module.exports = router;
