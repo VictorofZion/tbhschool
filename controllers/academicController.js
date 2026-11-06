@@ -1,3 +1,4 @@
+/*
 const supabase = require('../config/db');
 
 // Fetch student list for teacher drop-downs
@@ -171,4 +172,181 @@ module.exports = {
   getStudentsList,
   getResultsByStudent,
   uploadResult
+};
+
+*/
+
+const supabase = require('../config/db');
+
+// Fetch student roster for teacher drop-downs
+const getStudentsList = async (req, res) => {
+  try {
+    const { data: students, error } = await supabase
+      .from('students')
+      .select('id, reg_number, serial_number, class_level, user_id, users!user_id(full_name, email, avatar_url)');
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    return res.status(200).json({ success: true, students: students || [] });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch student roster.' });
+  }
+};
+
+// Fetch all results for a student (resolves both students.id and users.id)
+const getResultsByStudent = async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    const { data: student } = await supabase
+      .from('students')
+      .select('id, user_id')
+      .or(`id.eq.${studentId},user_id.eq.${studentId}`)
+      .maybeSingle();
+
+    const candidateIds = [studentId];
+    if (student) {
+      if (student.id) candidateIds.push(student.id);
+      if (student.user_id) candidateIds.push(student.user_id);
+    }
+
+    const { data: results, error } = await supabase
+      .from('results')
+      .select('*')
+      .in('student_id', candidateIds);
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    return res.status(200).json({ success: true, results: results || [] });
+  } catch (err) {
+    console.error("Error fetching student results:", err);
+    return res.status(500).json({ error: 'Failed to fetch academic results.' });
+  }
+};
+
+// Upload or Update student grade record scoped by term & session
+const uploadResult = async (req, res) => {
+  const { 
+    student_id, 
+    subject, 
+    test1_score, 
+    test2_score, 
+    test_score, 
+    exam_score, 
+    term, 
+    session 
+  } = req.body;
+
+  try {
+    const targetTerm = term || '1st Term';
+    const targetSession = session || '2026/2027';
+
+    const parsedTest1 = parseFloat(test1_score !== undefined ? test1_score : (test_score || 0)) || 0;
+    const parsedTest2 = parseFloat(test2_score) || 0;
+    const parsedExam = parseFloat(exam_score) || 0;
+
+    const { data: existing } = await supabase
+      .from('results')
+      .select('id')
+      .eq('student_id', student_id)
+      .eq('subject', subject)
+      .eq('term', targetTerm)
+      .eq('session', targetSession)
+      .maybeSingle();
+
+    if (existing) {
+      const { data: updated, error } = await supabase
+        .from('results')
+        .update({
+          test1_score: parsedTest1,
+          test2_score: parsedTest2,
+          test_score: parsedTest1,
+          exam_score: parsedExam
+        })
+        .eq('id', existing.id)
+        .select()
+        .single();
+
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ success: true, result: updated });
+    } else {
+      const { data: inserted, error } = await supabase
+        .from('results')
+        .insert([{
+          student_id,
+          subject,
+          test1_score: parsedTest1,
+          test2_score: parsedTest2,
+          test_score: parsedTest1,
+          exam_score: parsedExam,
+          term: targetTerm,
+          session: targetSession
+        }])
+        .select()
+        .single();
+
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(201).json({ success: true, result: inserted });
+    }
+  } catch (err) {
+    console.error("Upload error:", err);
+    return res.status(500).json({ error: 'Failed to upload student grade.' });
+  }
+};
+
+// Edit an existing result entry
+const updateResultScore = async (req, res) => {
+  const { resultId } = req.params;
+  const { test1_score, test2_score, exam_score } = req.body;
+
+  try {
+    const parsedTest1 = parseFloat(test1_score) || 0;
+    const parsedTest2 = parseFloat(test2_score) || 0;
+    const parsedExam = parseFloat(exam_score) || 0;
+
+    const { data: updated, error } = await supabase
+      .from('results')
+      .update({
+        test1_score: parsedTest1,
+        test2_score: parsedTest2,
+        test_score: parsedTest1,
+        exam_score: parsedExam
+      })
+      .eq('id', resultId)
+      .select()
+      .single();
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    return res.status(200).json({ success: true, result: updated });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to update result entry.' });
+  }
+};
+
+// Delete a single result entry
+const deleteResultScore = async (req, res) => {
+  const { resultId } = req.params;
+
+  try {
+    const { error } = await supabase
+      .from('results')
+      .delete()
+      .eq('id', resultId);
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    return res.status(200).json({ success: true, message: 'Result record deleted successfully.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to delete result record.' });
+  }
+};
+
+// Export ALL functions to make them available to router files
+module.exports = {
+  getStudentsList,
+  getResultsByStudent,
+  uploadResult,
+  updateResultScore,
+  deleteResultScore
 };
