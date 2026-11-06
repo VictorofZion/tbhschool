@@ -119,6 +119,54 @@ const uploadResult = async (req, res) => {
   }
 };
 
+// Edit an existing result entry (Admin, Teacher, Chief Admin)
+const updateResultScore = async (req, res) => {
+  const { resultId } = req.params;
+  const { test1_score, test2_score, exam_score } = req.body;
+
+  try {
+    const parsedTest1 = parseFloat(test1_score) || 0;
+    const parsedTest2 = parseFloat(test2_score) || 0;
+    const parsedExam = parseFloat(exam_score) || 0;
+
+    const { data: updated, error } = await supabase
+      .from('results')
+      .update({
+        test1_score: parsedTest1,
+        test2_score: parsedTest2,
+        test_score: parsedTest1, // legacy field sync
+        exam_score: parsedExam
+      })
+      .eq('id', resultId)
+      .select()
+      .single();
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    return res.status(200).json({ success: true, result: updated });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to update result entry.' });
+  }
+};
+
+// Delete a single result entry (Requires Chief Admin or Admin permission)
+const deleteResultScore = async (req, res) => {
+  const { resultId } = req.params;
+
+  try {
+    const { error } = await supabase
+      .from('results')
+      .delete()
+      .eq('id', resultId);
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    return res.status(200).json({ success: true, message: 'Result record deleted successfully.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to delete result record.' });
+  }
+};
+
 module.exports = {
   getStudentsList,
   getResultsByStudent,
