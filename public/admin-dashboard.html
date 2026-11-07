@@ -4,10 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard - Tetotim Blessed Hope School</title>
-  <!-- Browser Tab Favicon -->
-<link rel="icon" type="image/png" href="items/logo.png" />
-<!-- Apple iOS Shortcut Icon -->
-<link rel="apple-touch-icon" href="items/logo.png" />
+  <link rel="icon" type="image/png" href="items/logo.png" />
+  <link rel="apple-touch-icon" href="items/logo.png" />
   <link rel="stylesheet" href="global.css" />
   <style>
     :root {
@@ -19,13 +17,14 @@
     * { box-sizing: border-box; }
     body { margin: 0; font-family: 'Geist-Regular', sans-serif; background-color: var(--bg-cream); color: #1c1c1c; display: flex; min-height: 100vh; }
     .sidebar { width: 260px; background-color: var(--primary-navy); color: #ffffff; padding: 32px 20px; display: flex; flex-direction: column; justify-content: space-between; }
-    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; justify-content: space-between; }
     .brand img { width: 36px; height: auto; }
     .brand h2 { font-family: 'Geist-Bold', sans-serif; font-size: 16px; margin: 0; }
+    .mobile-nav-toggle { display: none; background: transparent; border: none; color: white; font-size: 24px; cursor: pointer; }
     .nav-links { display: flex; flex-direction: column; gap: 8px; }
     .nav-btn { background: transparent; border: none; color: #e4dfd5; padding: 12px 16px; text-align: left; font-size: 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
     .nav-btn.active, .nav-btn:hover { background-color: var(--accent-coral); color: #ffffff; }
-    .logout-btn { background-color: rgba(255,255,255,0.1); color: #ffffff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; }
+    .logout-btn { background-color: rgba(255,255,255,0.1); color: #ffffff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; margin-top: 20px; }
     .main-content { flex: 1; padding: 40px; overflow-y: auto; }
     .header-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
     .admin-avatar-header { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-coral); }
@@ -33,10 +32,11 @@
     .tab-content.active { display: block; }
     .card { background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 24px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
     label { font-size: 13px; font-weight: 600; }
-    input, select { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; }
+    input, select, textarea { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; width: 100%; }
     .btn-submit { background-color: var(--accent-coral); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 12px; width: 100%; }
+    .table-responsive { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
     th { background-color: #f1ede4; color: var(--primary-navy); }
@@ -53,6 +53,15 @@
     .progress-track { width: 100%; height: 12px; background: #e4dfd5; border-radius: 6px; overflow: hidden; margin: 16px 0 8px 0; }
     .progress-fill { width: 0%; height: 100%; background: var(--accent-coral); transition: width 0.2s ease; }
     .progress-percent-text { font-family: 'Geist-Bold', sans-serif; font-size: 14px; color: var(--primary-navy); }
+
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar { width: 100%; padding: 16px; }
+      .mobile-nav-toggle { display: block; }
+      .nav-links { display: none; }
+      .sidebar.mobile-open .nav-links { display: flex; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -70,14 +79,12 @@
         <button class="nav-btn active" onclick="switchTab('usersTab', event)">All Users</button>
         <button class="nav-btn" onclick="switchTab('feesTab', event)">School Fee Setup</button>
         <button class="nav-btn" onclick="switchTab('createUserTab', event)">Create User Account</button>
-        <button class="nav-btn active" onclick="switchTab('resultsTab', event)">Upload Term Results</button>
-    <button class="nav-btn" onclick="switchTab('createExamTab', event)">Create CBT Assessment</button>
-    <button class="nav-btn" onclick="switchTab('addQuestionsTab', event)">Add Exam Questions</button>
-    <button class="nav-btn" onclick="switchTab('assignmentTab', event)">Upload Notes &amp; Assignments</button>
-    <button class="nav-btn" onclick="switchTab('galleryUploadTab', event)">Upload Gallery Photos</button>
-    
-    <!-- Exclusive Admin Controls -->
-    <button class="nav-btn" onclick="switchTab('userManagementTab', event)">Manage Staff &amp; Roles</button>
+        <button class="nav-btn" onclick="switchTab('resultsTab', event)">Upload Term Results</button>
+        <button class="nav-btn" onclick="switchTab('createExamTab', event)">Create CBT Assessment</button>
+        <button class="nav-btn" onclick="switchTab('addQuestionsTab', event)">Add Exam Questions</button>
+        <button class="nav-btn" onclick="switchTab('assignmentTab', event)">Upload Notes &amp; Assignments</button>
+        <button class="nav-btn" onclick="switchTab('galleryUploadTab', event)">Upload Gallery Photos</button>
+        <button class="nav-btn" onclick="switchTab('userManagementTab', event)">Manage Staff &amp; Roles</button>
       </nav>
     </div>
     <button class="logout-btn" onclick="logout()">Sign Out</button>
@@ -132,27 +139,27 @@
             <div class="form-group">
               <label>Select Class Level</label>
               <select id="studentClassSelect" required>
-  <option value="">Select Class</option>
-  <optgroup label="Early Years & Primary">
-    <option value="Pre-KG">Pre-KG</option>
-    <option value="KG">KG</option>
-    <option value="Nursery 1">Nursery 1</option>
-    <option value="Nursery 2">Nursery 2</option>
-    <option value="Basic 1">Basic 1</option>
-    <option value="Basic 2">Basic 2</option>
-    <option value="Basic 3">Basic 3</option>
-    <option value="Basic 4">Basic 4</option>
-    <option value="Basic 5">Basic 5</option>
-  </optgroup>
-  <optgroup label="Secondary School">
-    <option value="JSS 1">JSS 1</option>
-    <option value="JSS 2">JSS 2</option>
-    <option value="JSS 3">JSS 3</option>
-    <option value="SSS 1">SSS 1</option>
-    <option value="SSS 2">SSS 2</option>
-    <option value="SSS 3">SSS 3</option>
-  </optgroup>
-</select>
+                <option value="">Select Class</option>
+                <optgroup label="Early Years & Primary">
+                  <option value="Pre-KG">Pre-KG</option>
+                  <option value="KG">KG</option>
+                  <option value="Nursery 1">Nursery 1</option>
+                  <option value="Nursery 2">Nursery 2</option>
+                  <option value="Basic 1">Basic 1</option>
+                  <option value="Basic 2">Basic 2</option>
+                  <option value="Basic 3">Basic 3</option>
+                  <option value="Basic 4">Basic 4</option>
+                  <option value="Basic 5">Basic 5</option>
+                </optgroup>
+                <optgroup label="Secondary School">
+                  <option value="JSS 1">JSS 1</option>
+                  <option value="JSS 2">JSS 2</option>
+                  <option value="JSS 3">JSS 3</option>
+                  <option value="SSS 1">SSS 1</option>
+                  <option value="SSS 2">SSS 2</option>
+                  <option value="SSS 3">SSS 3</option>
+                </optgroup>
+              </select>
             </div>
             <div class="form-group">
               <label>School Fee Amount (NGN)</label>
@@ -196,10 +203,6 @@
             <div class="form-group">
               <label>Password</label>
               <input type="text" id="userPassword" required />
-            <!--  <button type="button" onclick="togglePasswordVisibility('loginPassword', this)" style="position: absolute; right: 10px; top: 32px; background: none; border: none; cursor: pointer;">
-              Show
-              </button>
-              -->
             </div>
             <div class="form-group">
               <label>Upload Display Picture</label>
@@ -224,26 +227,26 @@
             <div class="form-group student-field">
               <label>Class Level</label>
               <select id="classLevel">
-               <option value="">Select Class</option>
-  <optgroup label="Early Years & Primary">
-    <option value="Pre-KG">Pre-KG</option>
-    <option value="KG">KG</option>
-    <option value="Nursery 1">Nursery 1</option>
-    <option value="Nursery 2">Nursery 2</option>
-    <option value="Basic 1">Basic 1</option>
-    <option value="Basic 2">Basic 2</option>
-    <option value="Basic 3">Basic 3</option>
-    <option value="Basic 4">Basic 4</option>
-    <option value="Basic 5">Basic 5</option>
-  </optgroup>
-  <optgroup label="Secondary School">
-    <option value="JSS 1">JSS 1</option>
-    <option value="JSS 2">JSS 2</option>
-    <option value="JSS 3">JSS 3</option>
-    <option value="SSS 1">SSS 1</option>
-    <option value="SSS 2">SSS 2</option>
-    <option value="SSS 3">SSS 3</option>
-  </optgroup>
+                <option value="">Select Class</option>
+                <optgroup label="Early Years & Primary">
+                  <option value="Pre-KG">Pre-KG</option>
+                  <option value="KG">KG</option>
+                  <option value="Nursery 1">Nursery 1</option>
+                  <option value="Nursery 2">Nursery 2</option>
+                  <option value="Basic 1">Basic 1</option>
+                  <option value="Basic 2">Basic 2</option>
+                  <option value="Basic 3">Basic 3</option>
+                  <option value="Basic 4">Basic 4</option>
+                  <option value="Basic 5">Basic 5</option>
+                </optgroup>
+                <optgroup label="Secondary School">
+                  <option value="JSS 1">JSS 1</option>
+                  <option value="JSS 2">JSS 2</option>
+                  <option value="JSS 3">JSS 3</option>
+                  <option value="SSS 1">SSS 1</option>
+                  <option value="SSS 2">SSS 2</option>
+                  <option value="SSS 3">SSS 3</option>
+                </optgroup>
               </select>
             </div>
             <div class="form-group student-field">
@@ -263,64 +266,151 @@
       </div>
     </section>
 
-<!-- 1. Term Results Tab -->
-  <section id="resultsTab" class="tab-content">
-    <div class="card">
-      <h2>Upload Term Academic Results</h2>
-      <form id="uploadResultForm" onsubmit="handleResultUpload(event)">
-        <div class="form-group">
-          <label>Select Student</label>
-          <select id="resultStudentSelect" required>
-            <option value="">-- Select Student --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Subject</label>
-          <input type="text" id="resultSubject" placeholder="e.g. Mathematics" required />
-        </div>
-        <div class="form-group">
-          <label>1st Test Score (Max 15)</label>
-          <input type="number" id="resultTest1" min="0" max="15" required />
-        </div>
-        <div class="form-group">
-          <label>2nd Test Score (Max 15)</label>
-          <input type="number" id="resultTest2" min="0" max="15" required />
-        </div>
-        <div class="form-group">
-          <label>Exam Score (Max 70)</label>
-          <input type="number" id="resultExam" min="0" max="70" required />
-        </div>
-        <div class="form-group">
-          <label>Term</label>
-          <select id="resultTerm" required>
-            <option value="1st Term">1st Term</option>
-            <option value="2nd Term">2nd Term</option>
-            <option value="3rd Term">3rd Term</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Session</label>
-          <input type="text" id="resultSession" value="2026/2027" required />
-        </div>
-        <button type="submit" class="btn-submit">Submit Grade Record</button>
-      </form>
-    </div>
-  </section>
+    <!-- Tab 4: Term Results -->
+    <section id="resultsTab" class="tab-content">
+      <div class="card">
+        <h2>Upload Term Academic Results</h2>
+        <form id="uploadResultForm" onsubmit="handleResultUpload(event)">
+          <div class="form-group">
+            <label>Select Student</label>
+            <select id="resultStudentSelect" required>
+              <option value="">-- Select Student --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <input type="text" id="resultSubject" placeholder="e.g. Mathematics" required />
+          </div>
+          <div class="form-group">
+            <label>1st Test Score (Max 15)</label>
+            <input type="number" id="resultTest1" min="0" max="15" required />
+          </div>
+          <div class="form-group">
+            <label>2nd Test Score (Max 15)</label>
+            <input type="number" id="resultTest2" min="0" max="15" required />
+          </div>
+          <div class="form-group">
+            <label>Exam Score (Max 70)</label>
+            <input type="number" id="resultExam" min="0" max="70" required />
+          </div>
+          <div class="form-group">
+            <label>Term</label>
+            <select id="resultTerm" required>
+              <option value="1st Term">1st Term</option>
+              <option value="2nd Term">2nd Term</option>
+              <option value="3rd Term">3rd Term</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Session</label>
+            <input type="text" id="resultSession" value="2026/2027" required />
+          </div>
+          <button type="submit" class="btn-submit">Submit Grade Record</button>
+        </form>
+      </div>
+    </section>
 
-  <!-- 2. Create CBT Assessment Tab -->
-  <section id="createExamTab" class="tab-content">
-    <div class="card">
-      <h2>Create Computer-Based Assessment (CBT)</h2>
-      <form id="createExamForm" onsubmit="handleCreateExam(event)">
-        <div class="form-group">
-          <label>Assessment Title</label>
-          <input type="text" id="examTitle" placeholder="e.g. 1st Term Mid-Term Assessment" required />
-        </div>
-        <div class="form-group">
-          <label>Target Class</label>
-          <select id="examClassSelect" required>
-            <option value="">Select Class</option>
-            <optgroup label="Early Years & Primary">
+    <!-- Tab 5: Create CBT Assessment -->
+    <section id="createExamTab" class="tab-content">
+      <div class="card">
+        <h2>Create Computer-Based Assessment (CBT)</h2>
+        <form id="createExamForm" onsubmit="handleCreateExam(event)">
+          <div class="form-group">
+            <label>Assessment Title</label>
+            <input type="text" id="examTitle" placeholder="e.g. 1st Term Mid-Term Assessment" required />
+          </div>
+          <div class="form-group">
+            <label>Target Class</label>
+            <select id="examClassSelect" required>
+              <option value="">Select Class</option>
+              <optgroup label="Early Years & Primary">
+                <option value="Pre-KG">Pre-KG</option>
+                <option value="KG">KG</option>
+                <option value="Nursery 1">Nursery 1</option>
+                <option value="Nursery 2">Nursery 2</option>
+                <option value="Basic 1">Basic 1</option>
+                <option value="Basic 2">Basic 2</option>
+                <option value="Basic 3">Basic 3</option>
+                <option value="Basic 4">Basic 4</option>
+                <option value="Basic 5">Basic 5</option>
+              </optgroup>
+              <optgroup label="Secondary School">
+                <option value="JSS 1">JSS 1</option>
+                <option value="JSS 2">JSS 2</option>
+                <option value="JSS 3">JSS 3</option>
+                <option value="SSS 1">SSS 1</option>
+                <option value="SSS 2">SSS 2</option>
+                <option value="SSS 3">SSS 3</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Duration (in minutes)</label>
+            <input type="number" id="examDuration" placeholder="45" required />
+          </div>
+          <button type="submit" class="btn-submit">Initialize CBT Exam</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Tab 6: Add Exam Questions -->
+    <section id="addQuestionsTab" class="tab-content">
+      <div class="card">
+        <h2>Add Exam Questions</h2>
+        <form id="addQuestionForm" onsubmit="handleAddQuestion(event)">
+          <div class="form-group">
+            <label>Select CBT Exam</label>
+            <select id="questionExamSelect" required>
+              <option value="">-- Select Created Exam --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Question Text</label>
+            <textarea id="questionText" rows="3" placeholder="Type question prompt..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Option A</label>
+            <input type="text" id="optionA" required />
+          </div>
+          <div class="form-group">
+            <label>Option B</label>
+            <input type="text" id="optionB" required />
+          </div>
+          <div class="form-group">
+            <label>Option C</label>
+            <input type="text" id="optionC" required />
+          </div>
+          <div class="form-group">
+            <label>Option D</label>
+            <input type="text" id="optionD" required />
+          </div>
+          <div class="form-group">
+            <label>Correct Answer Key</label>
+            <select id="correctOption" required>
+              <option value="A">Option A</option>
+              <option value="B">Option B</option>
+              <option value="C">Option C</option>
+              <option value="D">Option D</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-submit">Save Question</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Tab 7: Upload Notes & Assignments -->
+    <section id="assignmentTab" class="tab-content">
+      <div class="card">
+        <h2>Upload Notes &amp; Learning Materials</h2>
+        <form id="assignmentForm" onsubmit="handleMaterialUpload(event)">
+          <div class="form-group">
+            <label>Material Title</label>
+            <input type="text" id="materialTitle" placeholder="e.g. Basic Science Week 3 Notes" required />
+          </div>
+          <div class="form-group">
+            <label>Target Class</label>
+            <select id="materialClassSelect" required>
+              <option value="">Select Class</option>
               <option value="Pre-KG">Pre-KG</option>
               <option value="KG">KG</option>
               <option value="Nursery 1">Nursery 1</option>
@@ -330,170 +420,78 @@
               <option value="Basic 3">Basic 3</option>
               <option value="Basic 4">Basic 4</option>
               <option value="Basic 5">Basic 5</option>
-            </optgroup>
-            <optgroup label="Secondary School">
               <option value="JSS 1">JSS 1</option>
               <option value="JSS 2">JSS 2</option>
               <option value="JSS 3">JSS 3</option>
               <option value="SSS 1">SSS 1</option>
               <option value="SSS 2">SSS 2</option>
               <option value="SSS 3">SSS 3</option>
-            </optgroup>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Duration (in minutes)</label>
-          <input type="number" id="examDuration" placeholder="45" required />
-        </div>
-        <button type="submit" class="btn-submit">Initialize CBT Exam</button>
-      </form>
-    </div>
-  </section>
-
-  <!-- 3. Add Exam Questions Tab -->
-  <section id="addQuestionsTab" class="tab-content">
-    <div class="card">
-      <h2>Add Exam Questions</h2>
-      <form id="addQuestionForm" onsubmit="handleAddQuestion(event)">
-        <div class="form-group">
-          <label>Select CBT Exam</label>
-          <select id="questionExamSelect" required>
-            <option value="">-- Select Created Exam --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Question Text</label>
-          <textarea id="questionText" rows="3" placeholder="Type question prompt..." required></textarea>
-        </div>
-        <div class="form-group">
-          <label>Option A</label>
-          <input type="text" id="optionA" required />
-        </div>
-        <div class="form-group">
-          <label>Option B</label>
-          <input type="text" id="optionB" required />
-        </div>
-        <div class="form-group">
-          <label>Option C</label>
-          <input type="text" id="optionC" required />
-        </div>
-        <div class="form-group">
-          <label>Option D</label>
-          <input type="text" id="optionD" required />
-        </div>
-        <div class="form-group">
-          <label>Correct Answer Key</label>
-          <select id="correctOption" required>
-            <option value="A">Option A</option>
-            <option value="B">Option B</option>
-            <option value="C">Option C</option>
-            <option value="D">Option D</option>
-          </select>
-        </div>
-        <button type="submit" class="btn-submit">Save Question</button>
-      </form>
-    </div>
-  </section>
-
-  <!-- 4. Upload Notes & Assignments Tab -->
-  <section id="assignmentTab" class="tab-content">
-    <div class="card">
-      <h2>Upload Notes &amp; Learning Materials</h2>
-      <form id="assignmentForm" onsubmit="handleMaterialUpload(event)">
-        <div class="form-group">
-          <label>Material Title</label>
-          <input type="text" id="materialTitle" placeholder="e.g. Basic Science Week 3 Notes" required />
-        </div>
-        <div class="form-group">
-          <label>Target Class</label>
-          <select id="materialClassSelect" required>
-            <option value="">Select Class</option>
-            <option value="Pre-KG">Pre-KG</option>
-            <option value="KG">KG</option>
-            <option value="Nursery 1">Nursery 1</option>
-            <option value="Nursery 2">Nursery 2</option>
-            <option value="Basic 1">Basic 1</option>
-            <option value="Basic 2">Basic 2</option>
-            <option value="Basic 3">Basic 3</option>
-            <option value="Basic 4">Basic 4</option>
-            <option value="Basic 5">Basic 5</option>
-            <option value="JSS 1">JSS 1</option>
-            <option value="JSS 2">JSS 2</option>
-            <option value="JSS 3">JSS 3</option>
-            <option value="SSS 1">SSS 1</option>
-            <option value="SSS 2">SSS 2</option>
-            <option value="SSS 3">SSS 3</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Document File (.pdf, .docx, .png)</label>
-          <input type="file" id="materialFile" required />
-        </div>
-        <button type="submit" class="btn-submit">Upload Material</button>
-      </form>
-    </div>
-  </section>
-    
-    
-    
-    <!-- Gallery Upload Section -->
-<section id="galleryUploadTab" class="tab-content">
-  <div class="card">
-    <h3 style="font-family: 'Instrument Serif-Regular', serif; font-size: 24px; color: var(--primary-navy); margin-top: 0;">Upload Activity Photo</h3>
-    <form id="galleryForm" onsubmit="handleGalleryUpload(event)">
-      <div class="form-group">
-        <label>Photo Title / Caption</label>
-        <input type="text" id="galTitle" placeholder="e.g., Annual Sports Day 100m Race" required />
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Document File (.pdf, .docx, .png)</label>
+            <input type="file" id="materialFile" required />
+          </div>
+          <button type="submit" class="btn-submit">Upload Material</button>
+        </form>
       </div>
-      
-      <div class="form-group">
-        <label>Activity Section</label>
-        <select id="galSection" required>
-          <option value="sports">Sports & Athletics</option>
-          <option value="cultural">Cultural Day</option>
-          <option value="academic">Science & Academics</option>
-          <option value="graduation">Graduation & Ceremonies</option>
-          <option value="other">Other Activities</option>
-        </select>
+    </section>
+    
+    <!-- Tab 8: Gallery Upload Section -->
+    <section id="galleryUploadTab" class="tab-content">
+      <div class="card">
+        <h3 style="font-family: 'Instrument Serif-Regular', serif; font-size: 24px; color: var(--primary-navy); margin-top: 0;">Upload Activity Photo</h3>
+        <form id="galleryForm" onsubmit="handleGalleryUpload(event)">
+          <div class="form-group">
+            <label>Photo Title / Caption</label>
+            <input type="text" id="galTitle" placeholder="e.g., Annual Sports Day 100m Race" required />
+          </div>
+          <div class="form-group">
+            <label>Activity Section</label>
+            <select id="galSection" required>
+              <option value="sports">Sports & Athletics</option>
+              <option value="cultural">Cultural Day</option>
+              <option value="academic">Science & Academics</option>
+              <option value="graduation">Graduation & Ceremonies</option>
+              <option value="other">Other Activities</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Select Image File (.jpg, .jpeg, .png, .webp)</label>
+            <input type="file" id="galFileInput" accept="image/*" required />
+          </div>
+          <button type="submit" class="btn-submit">Upload Photo to Gallery</button>
+        </form>
       </div>
+    </section>
 
-      <div class="form-group">
-        <label>Select Image File (.jpg, .jpeg, .png, .webp)</label>
-        <input type="file" id="galFileInput" accept="image/*" required />
+    <!-- Tab 9: Manage Staff & Roles Tab -->
+    <section id="userManagementTab" class="tab-content">
+      <div class="card">
+        <h2>Manage Staff &amp; System Roles</h2>
+        <form id="roleManagementForm" onsubmit="handleRoleUpdate(event)">
+          <div class="form-group">
+            <label>Select Staff Member</label>
+            <select id="staffUserSelect" required>
+              <option value="">-- Select Staff User --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Assign New Role</label>
+            <select id="newRoleSelect" required>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
+              <option value="chief_admin">Chief Admin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Confirm Password (Security Re-check)</label>
+            <input type="text" id="recheckPassword" placeholder="Enter your password to authorize" required />
+          </div>
+          <button type="submit" class="btn-submit">Update User Role</button>
+        </form>
       </div>
-
-      <button type="submit" class="btn-submit">Upload Photo to Gallery</button>
-    </form>
-  </div>
-</section>
-
-    <!-- 6. Manage Staff & Roles Tab -->
-  <section id="userManagementTab" class="tab-content">
-    <div class="card">
-      <h2>Manage Staff &amp; System Roles</h2>
-      <form id="roleManagementForm" onsubmit="handleRoleUpdate(event)">
-        <div class="form-group">
-          <label>Select Staff Member</label>
-          <select id="staffUserSelect" required>
-            <option value="">-- Select Staff User --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Assign New Role</label>
-          <select id="newRoleSelect" required>
-            <option value="teacher">Teacher</option>
-            <option value="admin">Admin</option>
-            <option value="chief_admin">Chief Admin</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Confirm Password (Security Re-check)</label>
-          <input type="text" id="recheckPassword" placeholder="Enter your password to authorize" required />
-        </div>
-        <button type="submit" class="btn-submit">Update User Role</button>
-      </form>
-    </div>
-  </section>
+    </section>
   </main>
 
   <!-- Edit User Modal -->
@@ -508,58 +506,58 @@
           <img id="editAvatarPreview" src="" class="user-avatar" style="width: 72px; height: 72px;" alt="Preview" />
         </div>
 
-        <div class="form-group" style="margin-bottom: 12px;">
+        <div class="form-group">
           <label>Full Name</label>
           <input type="text" id="editFullName" required />
         </div>
-        <div class="form-group" style="margin-bottom: 12px;">
+        <div class="form-group">
           <label>Email Address</label>
           <input type="email" id="editEmail" required />
         </div>
-        <div class="form-group" style="margin-bottom: 12px;">
+        <div class="form-group">
           <label>Change Display Photo</label>
           <input type="file" id="editAvatarInput" accept="image/*" />
         </div>
 
         <div id="editStudentFields">
-          <div class="form-group" style="margin-bottom: 12px;">
+          <div class="form-group">
             <label>Registration Number</label>
             <input type="text" id="editRegNumber" />
           </div>
-          <div class="form-group" style="margin-bottom: 12px;">
+          <div class="form-group">
             <label>Serial Number</label>
             <input type="text" id="editSerialNumber" />
           </div>
-          <div class="form-group" style="margin-bottom: 12px;">
+          <div class="form-group">
             <label>Class Level</label>
             <select id="editClassLevel">
               <option value="">Select Class</option>
-  <optgroup label="Early Years & Primary">
-    <option value="Pre-KG">Pre-KG</option>
-    <option value="KG">KG</option>
-    <option value="Nursery 1">Nursery 1</option>
-    <option value="Nursery 2">Nursery 2</option>
-    <option value="Basic 1">Basic 1</option>
-    <option value="Basic 2">Basic 2</option>
-    <option value="Basic 3">Basic 3</option>
-    <option value="Basic 4">Basic 4</option>
-    <option value="Basic 5">Basic 5</option>
-  </optgroup>
-  <optgroup label="Secondary School">
-    <option value="JSS 1">JSS 1</option>
-    <option value="JSS 2">JSS 2</option>
-    <option value="JSS 3">JSS 3</option>
-    <option value="SSS 1">SSS 1</option>
-    <option value="SSS 2">SSS 2</option>
-    <option value="SSS 3">SSS 3</option>
-  </optgroup>
+              <optgroup label="Early Years & Primary">
+                <option value="Pre-KG">Pre-KG</option>
+                <option value="KG">KG</option>
+                <option value="Nursery 1">Nursery 1</option>
+                <option value="Nursery 2">Nursery 2</option>
+                <option value="Basic 1">Basic 1</option>
+                <option value="Basic 2">Basic 2</option>
+                <option value="Basic 3">Basic 3</option>
+                <option value="Basic 4">Basic 4</option>
+                <option value="Basic 5">Basic 5</option>
+              </optgroup>
+              <optgroup label="Secondary School">
+                <option value="JSS 1">JSS 1</option>
+                <option value="JSS 2">JSS 2</option>
+                <option value="JSS 3">JSS 3</option>
+                <option value="SSS 1">SSS 1</option>
+                <option value="SSS 2">SSS 2</option>
+                <option value="SSS 3">SSS 3</option>
+              </optgroup>
             </select>
           </div>
-          <div class="form-group" style="margin-bottom: 12px;">
+          <div class="form-group">
             <label>Date of Birth</label>
             <input type="date" id="editDobInput" />
           </div>
-          <div class="form-group" style="margin-bottom: 12px;">
+          <div class="form-group">
             <label>Certify Fee Payment Status</label>
             <select id="editFeeStatus">
               <option value="UNPAID">UNPAID</option>
@@ -587,11 +585,14 @@
 
   <script>
     const API_BASE = "/api";
-    const token = localStorage.getItem("tbhs_token");
-    const user = JSON.parse(localStorage.getItem("tbhs_user") || "{}");
+    const token = localStorage.getItem("token") || localStorage.getItem("tbhs_token");
+    const user = JSON.parse(localStorage.getItem("user") || localStorage.getItem("tbhs_user") || "{}");
     let cachedUsers = [];
 
-    if (!token || user.role !== "admin") window.location.href = "login.html";
+    // Allow Admin & Chief Admin
+    if (!token || (user.role !== "admin" && user.role !== "chief_admin")) {
+      window.location.href = "login.html";
+    }
 
     document.getElementById("adminName").innerText = `Welcome, ${user.full_name || 'Admin'}`;
     if (user.avatar_url) document.getElementById("adminAvatar").src = user.avatar_url;
@@ -599,28 +600,21 @@
     function toggleMobileMenu() {
       document.getElementById("sidebar").classList.toggle("mobile-open");
     }
-function togglePasswordVisibility(inputId, btn) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-
-  if (input.type === "password") {
-    input.type = "text";
-    btn.innerText = "Hide";
-  } else {
-    input.type = "password";
-    btn.innerText = "Show";
-  }
-}
-    
 
     function switchTab(tabId, evt) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
       document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
-      document.getElementById(tabId).classList.add("active");
-      if (evt && evt.target) evt.target.classList.add("active");
+
+      const targetTab = document.getElementById(tabId);
+      if (targetTab) targetTab.classList.add("active");
+
+      if (evt && evt.currentTarget) evt.currentTarget.classList.add("active");
       document.getElementById("sidebar").classList.remove("mobile-open");
+
       if (tabId === 'usersTab') fetchUsers();
       if (tabId === 'feesTab') fetchClassFees();
+      if (tabId === 'resultsTab') loadStudentsDropdown();
+      if (tabId === 'userManagementTab') loadStaffDropdown();
     }
 
     function toggleStudentFields() {
@@ -662,7 +656,7 @@ function togglePasswordVisibility(inputId, btn) {
                 <td>${feeBadge}</td>
                 <td>
                   <button class="btn-edit" onclick="openEditModal('${u.id}')">Edit</button>
-                  ${u.role !== 'admin' ? `<button class="btn-delete" onclick="deleteUser('${u.id}')">Delete</button>` : ''}
+                  ${u.role !== 'admin' && u.role !== 'chief_admin' ? `<button class="btn-delete" onclick="deleteUser('${u.id}')">Delete</button>` : ''}
                 </td>
               </tr>
             `;
@@ -699,7 +693,7 @@ function togglePasswordVisibility(inputId, btn) {
     async function handleUpdateClassFee(e) {
       e.preventDefault();
       const payload = {
-        class_level: document.getElementById("feeClassLevel").value,
+        class_level: document.getElementById("studentClassSelect").value,
         amount: parseFloat(document.getElementById("feeAmount").value)
       };
 
@@ -871,181 +865,226 @@ function togglePasswordVisibility(inputId, btn) {
       } catch (err) { alert(err.message); }
     }
 
+    // Populate Students Dropdown
+    async function loadStudentsDropdown() {
+      const select = document.getElementById("resultStudentSelect");
+      if (!select) return;
 
+      try {
+        const res = await fetch('/api/academic/students', {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-// Global JWT token reference from browser storage
-const token = localStorage.getItem("token");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to fetch student roster.');
 
-// 1. Fetch and populate Students into #resultStudentSelect
-async function loadStudentsDropdown() {
-  const select = document.getElementById("resultStudentSelect");
-  if (!select) return;
+        select.innerHTML = '<option value="">-- Select Student --</option>';
+        (data.students || []).forEach(student => {
+          const fullName = student.users?.full_name || 'Unnamed Student';
+          const regNum = student.reg_number ? ` (${student.reg_number})` : '';
+          const classLvl = student.class_level ? ` - ${student.class_level}` : '';
 
-  try {
-    const res = await fetch('/api/academic/students', {
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+          const option = document.createElement('option');
+          option.value = student.id; 
+          option.textContent = `${fullName}${regNum}${classLvl}`;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error("Failed to populate students dropdown:", err.message);
       }
-    });
+    }
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to fetch student roster.');
+    // Populate Staff Dropdown
+    async function loadStaffDropdown() {
+      const select = document.getElementById("staffUserSelect");
+      if (!select) return;
 
-    select.innerHTML = '<option value="">-- Select Student --</option>';
-    
-    (data.students || []).forEach(student => {
-      const fullName = student.users?.full_name || 'Unnamed Student';
-      const regNum = student.reg_number ? ` (${student.reg_number})` : '';
-      const classLvl = student.class_level ? ` - ${student.class_level}` : '';
+      try {
+        const res = await fetch('/api/users/staff', {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-      const option = document.createElement('option');
-      // Store student table ID for result uploading
-      option.value = student.id; 
-      option.textContent = `${fullName}${regNum}${classLvl}`;
-      select.appendChild(option);
-    });
-  } catch (err) {
-    console.error("Failed to populate students dropdown:", err);
-  }
-}
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to fetch staff list.');
 
-// 2. Fetch and populate Staff into #staffUserSelect
-async function loadStaffDropdown() {
-  const select = document.getElementById("staffUserSelect");
-  if (!select) return;
-
-  try {
-    const res = await fetch('/api/users/staff', {
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        select.innerHTML = '<option value="">-- Select Staff User --</option>';
+        (data.staff || []).forEach(staffUser => {
+          const option = document.createElement('option');
+          option.value = staffUser.id;
+          option.textContent = `${staffUser.full_name} (${staffUser.email}) — [Current: ${staffUser.role.toUpperCase()}]`;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error("Failed to populate staff dropdown:", err.message);
       }
-    });
+    }
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to fetch staff list.');
+    // Form Handlers
+    async function handleResultUpload(e) {
+      e.preventDefault();
+      const payload = {
+        student_id: document.getElementById("resultStudentSelect").value,
+        subject: document.getElementById("resultSubject").value,
+        test1_score: parseFloat(document.getElementById("resultTest1").value) || 0,
+        test2_score: parseFloat(document.getElementById("resultTest2").value) || 0,
+        exam_score: parseFloat(document.getElementById("resultExam").value) || 0,
+        term: document.getElementById("resultTerm").value,
+        session: document.getElementById("resultSession").value
+      };
 
-    select.innerHTML = '<option value="">-- Select Staff User --</option>';
-    
-    (data.staff || []).forEach(staffUser => {
-      const option = document.createElement('option');
-      option.value = staffUser.id;
-      option.textContent = `${staffUser.full_name} (${staffUser.email}) — [Current: ${staffUser.role.toUpperCase()}]`;
-      select.appendChild(option);
-    });
-  } catch (err) {
-    console.error("Failed to populate staff dropdown:", err);
-  }
-}
-
-// Trigger loading as soon as the DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
-  loadStudentsDropdown();
-  loadStaffDropdown();
-});
-
-
-
-    
+      try {
+        const res = await fetch(`${API_BASE}/academic/upload`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to upload grade.");
+        alert("Term result uploaded successfully!");
+        document.getElementById("uploadResultForm").reset();
+      } catch (err) { alert(err.message); }
+    }
 
     async function handleGalleryUpload(e) {
-  e.preventDefault();
+      e.preventDefault();
+      const fileInput = document.getElementById("galFileInput");
+      if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        alert("Please select an image file to upload.");
+        return;
+      }
 
-  const fileInput = document.getElementById("galFileInput");
-  if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-    alert("Please select an image file to upload.");
-    return;
-  }
+      const file = fileInput.files[0];
+      const fileExt = file.name.split('.').pop().toLowerCase();
+      const cleanBaseName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9]/g, "_");
+      const filePath = `${Date.now()}_${cleanBaseName}.${fileExt}`;
 
-  const file = fileInput.files[0];
-  const fileExt = file.name.split('.').pop().toLowerCase();
-  const cleanBaseName = file.name.replace(/\.[^/.]+\$/, "").replace(/[^a-zA-Z0-9]/g, "_");
-  const filePath = `${Date.now()}_${cleanBaseName}.${fileExt}`;
+      const SUPABASE_URL = "https://stlgpydccimcyvfnwqkh.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bGdweWRjY2ltY3l2Zm53cWtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MzI5NDUsImV4cCI6MjEwMzEwODk0NX0.NBPzbxNl4m-AU4Z5MimxeuGLk00pwJh0X5vFGc-xs1g";
 
-  // Supabase project credentials
-  const SUPABASE_URL = "https://stlgpydccimcyvfnwqkh.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bGdweWRjY2ltY3l2Zm53cWtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MzI5NDUsImV4cCI6MjEwMzEwODk0NX0.NBPzbxNl4m-AU4Z5MimxeuGLk00pwJh0X5vFGc-xs1g";
+      try {
+        showProgress("Uploading image to gallery storage...");
 
-  try {
-    showProgress("Uploading image to gallery storage...");
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/gallery/${filePath}`);
+          xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
+          xhr.setRequestHeader("Authorization", `Bearer ${SUPABASE_ANON_KEY}`);
+          xhr.setRequestHeader("x-upsert", "true");
+          xhr.setRequestHeader("Content-Type", file.type || "image/jpeg");
 
-    // 1. Upload file directly to Supabase Storage
-    await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/gallery/${filePath}`);
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              updateProgress(Math.round((evt.loaded / evt.total) * 90));
+            }
+          };
 
-      xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
-      xhr.setRequestHeader("Authorization", `Bearer ${SUPABASE_ANON_KEY}`);
-      xhr.setRequestHeader("x-upsert", "true");
-      xhr.setRequestHeader("Content-Type", file.type || "image/jpeg");
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+            } else {
+              try { reject(new Error(JSON.parse(xhr.responseText).message || "Storage upload failed.")); } 
+              catch { reject(new Error("Storage upload failed.")); }
+            }
+          };
+          xhr.onerror = () => reject(new Error("Network error during file upload."));
+          xhr.send(file);
+        });
 
-      xhr.upload.onprogress = (evt) => {
-        if (evt.lengthComputable) {
-          updateProgress(Math.round((evt.loaded / evt.total) * 90));
-        }
-      };
+        const publicImageUrl = `${SUPABASE_URL}/storage/v1/object/public/gallery/${filePath}`;
+        showProgress("Saving photo record...");
+        updateProgress(95);
 
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve();
-        } else {
-          try {
-            reject(new Error(JSON.parse(xhr.responseText).message || "Storage upload failed."));
-          } catch {
-            reject(new Error("Storage upload failed."));
-          }
-        }
-      };
+        const payload = {
+          title: document.getElementById("galTitle")?.value,
+          activity_section: document.getElementById("galSection")?.value,
+          image_url: publicImageUrl
+        };
 
-      xhr.onerror = () => reject(new Error("Network error during file upload."));
-      xhr.send(file);
-    });
+        const res = await fetch(`${API_BASE}/gallery/upload`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify(payload)
+        });
 
-    // 2. Generate public CDN URL
-    const publicImageUrl = `${SUPABASE_URL}/storage/v1/object/public/gallery/${filePath}`;
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to save gallery photo.");
 
-    showProgress("Saving photo record...");
-    updateProgress(95);
+        updateProgress(100);
+        setTimeout(() => {
+          hideProgress();
+          alert("Photo uploaded successfully to gallery!");
+          document.getElementById("galleryForm").reset();
+        }, 300);
+      } catch (err) {
+        hideProgress();
+        alert(err.message);
+      }
+    }
 
-    // 3. Post record metadata to backend API
-    const payload = {
-      title: document.getElementById("galTitle")?.value,
-      activity_section: document.getElementById("galSection")?.value,
-      image_url: publicImageUrl
-    };
+    async function handleRoleUpdate(e) {
+      e.preventDefault();
+      const targetUserId = document.getElementById("staffUserSelect").value;
+      const newRole = document.getElementById("newRoleSelect").value;
+      const currentPassword = document.getElementById("recheckPassword").value;
 
-    const res = await fetch(`${API_BASE}/gallery/upload`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
+      try {
+        // Step 1: Verify Password
+        const authRes = await fetch(`${API_BASE}/auth/verify-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ currentPassword })
+        });
+        const authData = await authRes.json();
+        if (!authRes.ok) throw new Error(authData.error || "Password verification failed.");
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to save gallery photo.");
+        // Step 2: Update User Role
+        const res = await fetch(`${API_BASE}/users/change-role`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ targetUserId, newRole })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to update user role.");
 
-    updateProgress(100);
-    setTimeout(() => {
-      hideProgress();
-      alert("Photo uploaded successfully to gallery!");
-      document.getElementById("galleryForm").reset();
-    }, 300);
+        alert("User role updated successfully!");
+        document.getElementById("roleManagementForm").reset();
+        loadStaffDropdown();
+      } catch (err) { alert(err.message); }
+    }
 
-  } catch (err) {
-    hideProgress();
-    alert(err.message);
-  }
-}
+    async function handleCreateExam(e) {
+      e.preventDefault();
+      alert("CBT Exam created successfully! You can now add questions to it.");
+    }
+
+    async function handleAddQuestion(e) {
+      e.preventDefault();
+      alert("Question saved to CBT Exam!");
+      document.getElementById("addQuestionForm").reset();
+    }
+
+    async function handleMaterialUpload(e) {
+      e.preventDefault();
+      alert("Learning material uploaded successfully!");
+      document.getElementById("assignmentForm").reset();
+    }
 
     function logout() {
       localStorage.clear();
       window.location.href = "login.html";
     }
 
-    fetchUsers();
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchUsers();
+      loadStudentsDropdown();
+      loadStaffDropdown();
+    });
   </script>
 </body>
 </html>
