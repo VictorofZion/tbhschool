@@ -263,6 +263,179 @@
       </div>
     </section>
 
+<!-- 1. Term Results Tab -->
+  <section id="resultsTab" class="tab-content active">
+    <div class="card">
+      <h2>Upload Term Academic Results</h2>
+      <form id="uploadResultForm" onsubmit="handleResultUpload(event)">
+        <div class="form-group">
+          <label>Select Student</label>
+          <select id="resultStudentSelect" required>
+            <option value="">-- Select Student --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" id="resultSubject" placeholder="e.g. Mathematics" required />
+        </div>
+        <div class="form-group">
+          <label>1st Test Score (Max 15)</label>
+          <input type="number" id="resultTest1" min="0" max="15" required />
+        </div>
+        <div class="form-group">
+          <label>2nd Test Score (Max 15)</label>
+          <input type="number" id="resultTest2" min="0" max="15" required />
+        </div>
+        <div class="form-group">
+          <label>Exam Score (Max 70)</label>
+          <input type="number" id="resultExam" min="0" max="70" required />
+        </div>
+        <div class="form-group">
+          <label>Term</label>
+          <select id="resultTerm" required>
+            <option value="1st Term">1st Term</option>
+            <option value="2nd Term">2nd Term</option>
+            <option value="3rd Term">3rd Term</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Session</label>
+          <input type="text" id="resultSession" value="2026/2027" required />
+        </div>
+        <button type="submit" class="btn-submit">Submit Grade Record</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 2. Create CBT Assessment Tab -->
+  <section id="createExamTab" class="tab-content">
+    <div class="card">
+      <h2>Create Computer-Based Assessment (CBT)</h2>
+      <form id="createExamForm" onsubmit="handleCreateExam(event)">
+        <div class="form-group">
+          <label>Assessment Title</label>
+          <input type="text" id="examTitle" placeholder="e.g. 1st Term Mid-Term Assessment" required />
+        </div>
+        <div class="form-group">
+          <label>Target Class</label>
+          <select id="examClassSelect" required>
+            <option value="">Select Class</option>
+            <optgroup label="Early Years & Primary">
+              <option value="Pre-KG">Pre-KG</option>
+              <option value="KG">KG</option>
+              <option value="Nursery 1">Nursery 1</option>
+              <option value="Nursery 2">Nursery 2</option>
+              <option value="Basic 1">Basic 1</option>
+              <option value="Basic 2">Basic 2</option>
+              <option value="Basic 3">Basic 3</option>
+              <option value="Basic 4">Basic 4</option>
+              <option value="Basic 5">Basic 5</option>
+            </optgroup>
+            <optgroup label="Secondary School">
+              <option value="JSS 1">JSS 1</option>
+              <option value="JSS 2">JSS 2</option>
+              <option value="JSS 3">JSS 3</option>
+              <option value="SSS 1">SSS 1</option>
+              <option value="SSS 2">SSS 2</option>
+              <option value="SSS 3">SSS 3</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Duration (in minutes)</label>
+          <input type="number" id="examDuration" placeholder="45" required />
+        </div>
+        <button type="submit" class="btn-submit">Initialize CBT Exam</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 3. Add Exam Questions Tab -->
+  <section id="addQuestionsTab" class="tab-content">
+    <div class="card">
+      <h2>Add Exam Questions</h2>
+      <form id="addQuestionForm" onsubmit="handleAddQuestion(event)">
+        <div class="form-group">
+          <label>Select CBT Exam</label>
+          <select id="questionExamSelect" required>
+            <option value="">-- Select Created Exam --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Question Text</label>
+          <textarea id="questionText" rows="3" placeholder="Type question prompt..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Option A</label>
+          <input type="text" id="optionA" required />
+        </div>
+        <div class="form-group">
+          <label>Option B</label>
+          <input type="text" id="optionB" required />
+        </div>
+        <div class="form-group">
+          <label>Option C</label>
+          <input type="text" id="optionC" required />
+        </div>
+        <div class="form-group">
+          <label>Option D</label>
+          <input type="text" id="optionD" required />
+        </div>
+        <div class="form-group">
+          <label>Correct Answer Key</label>
+          <select id="correctOption" required>
+            <option value="A">Option A</option>
+            <option value="B">Option B</option>
+            <option value="C">Option C</option>
+            <option value="D">Option D</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-submit">Save Question</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 4. Upload Notes & Assignments Tab -->
+  <section id="assignmentTab" class="tab-content">
+    <div class="card">
+      <h2>Upload Notes &amp; Learning Materials</h2>
+      <form id="assignmentForm" onsubmit="handleMaterialUpload(event)">
+        <div class="form-group">
+          <label>Material Title</label>
+          <input type="text" id="materialTitle" placeholder="e.g. Basic Science Week 3 Notes" required />
+        </div>
+        <div class="form-group">
+          <label>Target Class</label>
+          <select id="materialClassSelect" required>
+            <option value="">Select Class</option>
+            <option value="Pre-KG">Pre-KG</option>
+            <option value="KG">KG</option>
+            <option value="Nursery 1">Nursery 1</option>
+            <option value="Nursery 2">Nursery 2</option>
+            <option value="Basic 1">Basic 1</option>
+            <option value="Basic 2">Basic 2</option>
+            <option value="Basic 3">Basic 3</option>
+            <option value="Basic 4">Basic 4</option>
+            <option value="Basic 5">Basic 5</option>
+            <option value="JSS 1">JSS 1</option>
+            <option value="JSS 2">JSS 2</option>
+            <option value="JSS 3">JSS 3</option>
+            <option value="SSS 1">SSS 1</option>
+            <option value="SSS 2">SSS 2</option>
+            <option value="SSS 3">SSS 3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Document File (.pdf, .docx, .png)</label>
+          <input type="file" id="materialFile" required />
+        </div>
+        <button type="submit" class="btn-submit">Upload Material</button>
+      </form>
+    </div>
+  </section>
+    
+    
+    
     <!-- Gallery Upload Section -->
 <section id="galleryUploadTab" class="tab-content">
   <div class="card">
@@ -293,6 +466,34 @@
     </form>
   </div>
 </section>
+
+    <!-- 6. Manage Staff & Roles Tab -->
+  <section id="userManagementTab" class="tab-content">
+    <div class="card">
+      <h2>Manage Staff &amp; System Roles</h2>
+      <form id="roleManagementForm" onsubmit="handleRoleUpdate(event)">
+        <div class="form-group">
+          <label>Select Staff Member</label>
+          <select id="staffUserSelect" required>
+            <option value="">-- Select Staff User --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Assign New Role</label>
+          <select id="newRoleSelect" required>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+            <option value="chief_admin">Chief Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password (Security Re-check)</label>
+          <input type="text" id="recheckPassword" placeholder="Enter your password to authorize" required />
+        </div>
+        <button type="submit" class="btn-submit">Update User Role</button>
+      </form>
+    </div>
+  </section>
   </main>
 
   <!-- Edit User Modal -->
