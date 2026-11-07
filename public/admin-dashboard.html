@@ -871,6 +871,84 @@ function togglePasswordVisibility(inputId, btn) {
       } catch (err) { alert(err.message); }
     }
 
+
+
+// Global JWT token reference from browser storage
+const token = localStorage.getItem("token");
+
+// 1. Fetch and populate Students into #resultStudentSelect
+async function loadStudentsDropdown() {
+  const select = document.getElementById("resultStudentSelect");
+  if (!select) return;
+
+  try {
+    const res = await fetch('/api/academic/students', {
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch student roster.');
+
+    select.innerHTML = '<option value="">-- Select Student --</option>';
+    
+    (data.students || []).forEach(student => {
+      const fullName = student.users?.full_name || 'Unnamed Student';
+      const regNum = student.reg_number ? ` (${student.reg_number})` : '';
+      const classLvl = student.class_level ? ` - ${student.class_level}` : '';
+
+      const option = document.createElement('option');
+      // Store student table ID for result uploading
+      option.value = student.id; 
+      option.textContent = `${fullName}${regNum}${classLvl}`;
+      select.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Failed to populate students dropdown:", err);
+  }
+}
+
+// 2. Fetch and populate Staff into #staffUserSelect
+async function loadStaffDropdown() {
+  const select = document.getElementById("staffUserSelect");
+  if (!select) return;
+
+  try {
+    const res = await fetch('/api/users/staff', {
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch staff list.');
+
+    select.innerHTML = '<option value="">-- Select Staff User --</option>';
+    
+    (data.staff || []).forEach(staffUser => {
+      const option = document.createElement('option');
+      option.value = staffUser.id;
+      option.textContent = `${staffUser.full_name} (${staffUser.email}) — [Current: ${staffUser.role.toUpperCase()}]`;
+      select.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Failed to populate staff dropdown:", err);
+  }
+}
+
+// Trigger loading as soon as the DOM is ready
+document.addEventListener("DOMContentLoaded", () => {
+  loadStudentsDropdown();
+  loadStaffDropdown();
+});
+
+
+
+    
+
     async function handleGalleryUpload(e) {
   e.preventDefault();
 
