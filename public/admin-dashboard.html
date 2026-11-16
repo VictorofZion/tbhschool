@@ -319,54 +319,61 @@
      <!-- Tab 2: Create CBT Assessment -->
     <section id="createExamTab" class="tab-content">
       <div class="card">
-     <form id="createExamForm" onsubmit="handleCreateExam(event)">
-  <div class="form-group">
-    <label>Assessment Title</label>
-    <input type="text" id="examTitle" placeholder="e.g. 1st Term Mid-Term Assessment" required />
-  </div>
-  <div class="form-group">
-    <label>Subject</label>
-    <input type="text" id="examSubject" placeholder="e.g. Mathematics" required />
-  </div>
-  <div class="form-group">
-    <label>Assessment Type</label>
-    <select id="examType" required>
-      <option value="test1">1st Test (20 Marks)</option>
-      <option value="test2">2nd Test (20 Marks)</option>
-      <option value="exam">Terminal Exam (60 Marks)</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label>Target Class</label>
-    <select id="examClassSelect" required>
-      <option value="">Select Class</option>
-      <optgroup label="Early Years & Primary">
-        <option value="Pre-KG">Pre-KG</option>
-        <option value="KG">KG</option>
-        <option value="Nursery 1">Nursery 1</option>
-        <option value="Nursery 2">Nursery 2</option>
-        <option value="Basic 1">Basic 1</option>
-        <option value="Basic 2">Basic 2</option>
-        <option value="Basic 3">Basic 3</option>
-        <option value="Basic 4">Basic 4</option>
-        <option value="Basic 5">Basic 5</option>
-      </optgroup>
-      <optgroup label="Secondary School">
-        <option value="JSS 1">JSS 1</option>
-        <option value="JSS 2">JSS 2</option>
-        <option value="JSS 3">JSS 3</option>
-        <option value="SSS 1">SSS 1</option>
-        <option value="SSS 2">SSS 2</option>
-        <option value="SSS 3">SSS 3</option>
-      </optgroup>
-    </select>
-  </div>
-  <div class="form-group">
-    <label>Duration (in minutes)</label>
-    <input type="number" id="examDuration" placeholder="45" required />
-  </div>
-  <button type="submit" class="btn-submit">Initialize &amp; Publish CBT Exam</button>
-</form>
+        <form id="createExamForm" onsubmit="handleCreateExam(event)">
+          <div class="form-group">
+            <label for="examType">Assessment Type</label>
+<select id="examType" required>
+  <option value="test1">1st Continuous Assessment (Test 1 - 20 Marks)</option>
+  <option value="test2">2nd Continuous Assessment (Test 2 - 20 Marks)</option>
+  <option value="exam">Terminal Examination (60 Marks)</option>
+</select>
+          </div>
+          <div class="form-group">
+            <label>Assessment Title</label>
+            <input type="text" id="examTitle" placeholder="JS1 First Term Mathematics CA 1" required />
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <select id="examSubject" required>
+              <option value="Mathematics">Mathematics</option>
+              <option value="English">English</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+              <option value="Other">Others</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Class Level</label>
+            <select id="examClass" required>
+             <option value="">Select Class</option>
+                <optgroup label="Early Years & Primary">
+                  <option value="Pre-KG">Pre-KG</option>
+                  <option value="KG">KG</option>
+                  <option value="Nursery 1">Nursery 1</option>
+                  <option value="Nursery 2">Nursery 2</option>
+                  <option value="Basic 1">Basic 1</option>
+                  <option value="Basic 2">Basic 2</option>
+                  <option value="Basic 3">Basic 3</option>
+                  <option value="Basic 4">Basic 4</option>
+                  <option value="Basic 5">Basic 5</option>
+                </optgroup>
+                <optgroup label="Secondary School">
+                  <option value="JSS 1">JSS 1</option>
+                  <option value="JSS 2">JSS 2</option>
+                  <option value="JSS 3">JSS 3</option>
+                  <option value="SSS 1">SSS 1</option>
+                  <option value="SSS 2">SSS 2</option>
+                  <option value="SSS 3">SSS 3</option>
+                </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Duration (Minutes)</label>
+            <input type="number" id="examDuration" value="20" min="5" max="180" required />
+          </div>
+          <button type="submit" class="btn-submit">Publish Assessment Shell</button>
+        </form>
       </div>
     </section>
 
@@ -1126,135 +1133,171 @@ async function loadExamsDropdown() {
     }
 
     async function handleCreateExam(e) {
-  e.preventDefault();
-  const payload = {
-    title: document.getElementById("examTitle").value,
-    subject: document.getElementById("examSubject").value,
-    type: document.getElementById("examType").value,
-    class_level: document.getElementById("examClassSelect").value,
-    duration_minutes: parseInt(document.getElementById("examDuration").value, 10) || 45
-  };
-
-  try {
-    const res = await fetch(`${API_BASE}/exams/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to publish CBT assessment.");
-
-    alert("CBT Assessment published successfully! You can now add questions to it.");
-    document.getElementById("createExamForm").reset();
-    if (typeof loadExamsDropdown === "function") loadExamsDropdown();
-  } catch (err) {
-    alert(err.message);
-  }
-}
-
-    async function handleAddQuestion(e) {
       e.preventDefault();
-      const exam_id = document.getElementById("questionExamSelect").value;
-      if (!exam_id) {
-        alert("Please select a CBT exam first.");
+
+      const title = document.getElementById("examTitle")?.value;
+      const subject = document.getElementById("examSubject")?.value;
+      const class_level = document.getElementById("examClass")?.value;
+      const duration_minutes = parseInt(document.getElementById("examDuration")?.value || 20, 10);
+      const type = document.getElementById("examType")?.value;
+
+      if (!title || !subject || !class_level) {
+        alert("Please fill in all required exam fields.");
         return;
       }
 
-      const payload = {
-        exam_id,
-        questions: [{
-          question_text: document.getElementById("questionText").value,
-          option_a: document.getElementById("optionA").value,
-          option_b: document.getElementById("optionB").value,
-          option_c: document.getElementById("optionC").value,
-          option_d: document.getElementById("optionD").value,
-          correct_option: document.getElementById("correctOption").value
-        }]
+      const payload = { title, subject, class_level, duration_minutes, type };
+
+      try {
+        const res = await fetch(`${API_BASE}/exams/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to create assessment.");
+
+        alert(`Assessment Created! Exam ID: ${data.exam.id}`);
+
+        const qExamIdInput = document.getElementById("qExamId");
+        if (qExamIdInput) qExamIdInput.value = data.exam.id;
+
+        document.getElementById("createExamForm").reset();
+        switchTab("addQuestionsTab");
+      } catch (err) { alert(err.message); }
+    }
+
+    async function handleAddQuestion(e) {
+      e.preventDefault();
+      const exam_id = document.getElementById("qExamId")?.value;
+      const question = {
+        question_text: document.getElementById("qText")?.value,
+        option_a: document.getElementById("qOptA")?.value,
+        option_b: document.getElementById("qOptB")?.value,
+        option_c: document.getElementById("qOptC")?.value,
+        option_d: document.getElementById("qOptD")?.value,
+        correct_option: document.getElementById("qCorrect")?.value
       };
 
       try {
         const res = await fetch(`${API_BASE}/exams/add-questions`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ exam_id, questions: [question] })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to add question.");
+
+        alert("Question added!");
+        document.getElementById("qText").value = "";
+        document.getElementById("qOptA").value = "";
+        document.getElementById("qOptB").value = "";
+        document.getElementById("qOptC").value = "";
+        document.getElementById("qOptD").value = "";
+      } catch (err) { alert(err.message); }
+    }
+
+    async function handleUploadMaterial(e) {
+      e.preventDefault();
+
+      const fileInput = document.getElementById("matFileInput");
+      if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        alert("Please select a file to attach.");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const fileExt = file.name.split('.').pop();
+      const cleanBaseName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9]/g, "_");
+      const filePath = `${Date.now()}_${cleanBaseName}.${fileExt}`;
+
+      const SUPABASE_URL = "https://stlgpydccimcyvfnwqkh.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bGdweWRjY2ltY3l2Zm53cWtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MzI5NDUsImV4cCI6MjEwMzEwODk0NX0.NBPzbxNl4m-AU4Z5MimxeuGLk00pwJh0X5vFGc-xs1g";
+
+      try {
+        showProgress("Uploading file to cloud storage...");
+
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/materials/${filePath}`);
+
+          xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
+          xhr.setRequestHeader("Authorization", `Bearer ${SUPABASE_ANON_KEY}`);
+          xhr.setRequestHeader("x-upsert", "true");
+          xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              updateProgress(Math.round((evt.loaded / evt.total) * 90));
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+            } else {
+              try {
+                reject(new Error(JSON.parse(xhr.responseText).message || "Storage upload failed."));
+              } catch {
+                reject(new Error("Storage upload failed."));
+              }
+            }
+          };
+
+          xhr.onerror = () => reject(new Error("Network error during file upload."));
+          xhr.send(file);
+        });
+
+        const publicFileUrl = `${SUPABASE_URL}/storage/v1/object/public/materials/${filePath}`;
+
+        showProgress("Saving document details...");
+        updateProgress(95);
+
+        const dueDateInput = document.getElementById("matDueDate");
+        const rawDueDate = dueDateInput ? dueDateInput.value : null;
+        const cleanDueDate = (rawDueDate && rawDueDate.trim() !== "") ? rawDueDate : null;
+
+        const payload = {
+          title: document.getElementById("matTitle")?.value,
+          subject: document.getElementById("matSubject")?.value,
+          class_level: document.getElementById("matClass")?.value,
+          material_type: document.getElementById("matType")?.value,
+          description: document.getElementById("matDesc")?.value,
+          due_date: cleanDueDate,
+          file_name: file.name,
+          file_data: publicFileUrl
+        };
+
+        const res = await fetch(`${API_BASE}/materials/upload`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify(payload)
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to save question.");
+        if (!res.ok) throw new Error(data.error || "Failed to publish document.");
 
-        alert("Question added to CBT Assessment!");
-        document.getElementById("addQuestionForm").reset();
-        document.getElementById("questionExamSelect").value = exam_id;
+        updateProgress(100);
+        setTimeout(() => {
+          hideProgress();
+          alert("Class document published successfully!");
+          document.getElementById("materialForm").reset();
+        }, 300);
+
       } catch (err) {
+        hideProgress();
         alert(err.message);
       }
     }
-    async function handleMaterialUpload(e) {
-  e.preventDefault();
-  const title = document.getElementById("materialTitle").value;
-  const class_level = document.getElementById("materialClassSelect").value;
-  const fileInput = document.getElementById("materialFile");
 
-  if (!fileInput.files || !fileInput.files[0]) {
-    alert("Please select a file to upload.");
-    return;
-  }
-
-  const file = fileInput.files[0];
-  const SUPABASE_URL = "https://stlgpydccimcyvfnwqkh.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bGdweWRjY2ltY3l2Zm53cWtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MzI5NDUsImV4cCI6MjEwMzEwODk0NX0.NBPzbxNl4m-AU4Z5MimxeuGLk00pwJh0X5vFGc-xs1g";
-  const cleanName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-
-  try {
-    showProgress("Uploading learning material...");
-
-    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/materials/${cleanName}`, {
-      method: "POST",
-      headers: {
-        "apikey": SUPABASE_ANON_KEY,
-        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        "x-upsert": "true",
-        "Content-Type": file.type || "application/octet-stream"
-      },
-      body: file
-    });
-
-    if (!uploadRes.ok) {
-      const errData = await uploadRes.json().catch(() => ({}));
-      throw new Error(errData.message || "Failed to upload file to storage.");
+    function logout() {
+      localStorage.clear();
+      window.location.href = "login.html";
     }
 
-    const file_url = `${SUPABASE_URL}/storage/v1/object/public/materials/${cleanName}`;
-    updateProgress(80);
-
-    const res = await fetch(`${API_BASE}/materials`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ title, class_level, file_url })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to save learning material record.");
-
-    updateProgress(100);
-    hideProgress();
-    alert("Learning material uploaded successfully!");
-    document.getElementById("assignmentForm").reset();
-  } catch (err) {
-    hideProgress();
-    alert(err.message);
-  }
-}
+    populateStudentDropdown();
   </script>
 </body>
 </html>
