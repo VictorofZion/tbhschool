@@ -1,52 +1,30 @@
-/*const express = require('express');
-const router = express.Router();
-const { authenticateUser } = require('../middleware/auth');
-const { 
-  getStudentsList, 
-  getResultsByStudent, 
-  uploadResult 
-} = require('../controllers/academicController');
-
-router.use(authenticateUser);
-
-// Academic management routes
-router.get('/students-list', getStudentsList);
-router.post('/results', uploadResult);
-router.get('/results/student/:studentId', getResultsByStudent);
-// Result management routes
-router.put('/result/:resultId', authenticateUser, authorizeRoles('admin', 'teacher'), updateResultScore);
-router.delete('/result/:resultId', authenticateUser, authorizeRoles('chief_admin', 'admin'), deleteResultScore);
-
-module.exports = router;
-*/
-
-
 const express = require('express');
 const router = express.Router();
-
-// Controllers
-const { 
-  getStudentsList, 
-  getResultsByStudent, 
+const {
+  getStudentsList,
+  getResultsByStudent,
+  getAllResults,
   uploadResult,
   updateResultScore,
   deleteResultScore
 } = require('../controllers/academicController');
-
-// Middleware (Ensure BOTH authenticateUser AND authorizeRoles are imported)
 const { authenticateUser, authorizeRoles } = require('../middleware/auth');
 
-// Public or student routes
+// 1. Static routes MUST come BEFORE parameterized /:studentId routes!
 router.get('/students', authenticateUser, getStudentsList);
+router.get('/roster', authenticateUser, getStudentsList);
+router.get('/results', authenticateUser, getResultsByStudent);
+router.get('/my-results', authenticateUser, getResultsByStudent);
+router.get('/results/all', authenticateUser, authorizeRoles('teacher'), getAllResults);
+
+// 2. Parameterized student result lookup routes (covers all student-dashboard URL patterns)
+router.get('/results/student/:studentId', authenticateUser, getResultsByStudent);
+router.get('/results/:studentId', authenticateUser, getResultsByStudent);
 router.get('/student/:studentId', authenticateUser, getResultsByStudent);
 
-// Teacher and Admin grade upload / edit routes
-// routes/academicRoutes.js
-// 'teacher' minimum requirement -> Admins and Chief Admins are automatically allowed
+// 3. Grade upload, update, and deletion routes
 router.post('/upload', authenticateUser, authorizeRoles('teacher'), uploadResult);
 router.put('/result/:resultId', authenticateUser, authorizeRoles('teacher'), updateResultScore);
-
-// Exclusive action -> Only Admins & Chief Admins
 router.delete('/result/:resultId', authenticateUser, authorizeRoles('admin'), deleteResultScore);
 
 module.exports = router;
