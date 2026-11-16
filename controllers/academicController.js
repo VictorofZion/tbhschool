@@ -39,19 +39,6 @@ const getStudentsList = async (req, res) => {
   }
 };
 
-    const formattedStudents = (students || []).map(s => ({
-      ...s,
-      full_name: usersMap[s.user_id]?.full_name || s.full_name || 'Unnamed Student',
-      users: usersMap[s.user_id] || null
-    }));
-
-    return res.status(200).json({ success: true, students: formattedStudents });
-  } catch (err) {
-    console.error('Error fetching student roster:', err);
-    return res.status(500).json({ error: 'Failed to fetch student roster.' });
-  }
-};
-
 // Fetch results for a specific student ID or logged-in student
 const getResultsByStudent = async (req, res) => {
   const targetId = req.params.studentId || req.query.studentId || req.user?.id;
