@@ -877,28 +877,29 @@
     }
 
     async function handleUpdateClassFee(e) {
-      e.preventDefault();
-      const payload = {
-        class_level: document.getElementById("studentClassSelect").value,
-        amount: parseFloat(document.getElementById("feeAmount").value)
-      };
+  e.preventDefault();
+  const payload = {
+    class_level: document.getElementById("studentClassSelect").value,
+    amount: parseFloat(document.getElementById("feeAmount").value)
+  };
 
-      try {
-        const res = await fetch(`${API_BASE}/admin/fees`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify(payload)
-        });
+  try {
+    const res = await fetch(`${API_BASE}/admin/fees`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    });
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to update fee structure.");
 
-        alert("Fee structure updated!");
-        document.getElementById("feeAmount").value = "";
-        fetchClassFees();
-      } catch (err) { alert(err.message); }
-    }
-
+    alert("Fee structure updated!");
+    document.getElementById("classFeeForm").reset();
+    fetchClassFees();
+  } catch (err) {
+    alert(err.message);
+  }
+}
     function showProgress(title) {
       document.getElementById("progressTitle").innerText = title;
       document.getElementById("progressBar").style.width = "0%";
