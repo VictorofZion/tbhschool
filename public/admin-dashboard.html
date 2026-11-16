@@ -920,8 +920,10 @@
       const select = document.getElementById("resultStudentSelect");
       if (!select) return;
 
+      select.innerHTML = '<option value="">Loading students...</option>';
+
       try {
-        const res = await fetch('/api/academic/students', {
+        const res = await fetch(`${API_BASE}/academic/students`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -929,11 +931,17 @@
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to fetch student roster.');
+        if (!res.ok) throw new Error(data.error || `Error ${res.status}: Failed to fetch student roster.`);
+
+        const students = data.students || [];
+        if (students.length === 0) {
+          select.innerHTML = '<option value="">-- No Students Registered Yet --</option>';
+          return;
+        }
 
         select.innerHTML = '<option value="">-- Select Student --</option>';
-        (data.students || []).forEach(student => {
-          const fullName = student.users?.full_name || 'Unnamed Student';
+        students.forEach(student => {
+          const fullName = student.users?.full_name || student.full_name || 'Unnamed Student';
           const regNum = student.reg_number ? ` (${student.reg_number})` : '';
           const classLvl = student.class_level ? ` - ${student.class_level}` : '';
 
@@ -943,10 +951,10 @@
           select.appendChild(option);
         });
       } catch (err) {
-        console.error("Failed to populate students dropdown:", err.message);
+        console.error("Failed to populate students dropdown:", err);
+        select.innerHTML = `<option value="">Error: ${err.message}</option>`;
       }
     }
-
     // Populate Staff Dropdown
     async function loadStaffDropdown() {
       const select = document.getElementById("staffUserSelect");

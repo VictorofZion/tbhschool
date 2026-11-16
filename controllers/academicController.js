@@ -3,34 +3,70 @@
 const supabase = require('../config/db');
 
 // Fetch student roster for Admin & Teacher dropdowns (safe join without strict FK name dependency)
+// Fetch student roster for Admin & Teacher dropdowns
 const getStudentsList = async (req, res) => {
   try {
-    const { data: students, error: studentErr } = await supabase
+    // 1. Fetch all users with role = 'student' directly from users table
+    const { data: studentUsers, error: userErr } = await supabase
+      .from('users')
+      .select('id, full_name, email, avatar_url')
+      .eq('role', 'student')
+      .order('full_name', { ascending: true });
+
+    if (userErr) return res.status(400).json({ error: userErr.message });
+
+    // 2. Fetch matching rows from students table
+    const { data: studentProfiles, error: studentErr } = await supabase
       .from('students')
-      .select('id, user_id, reg_number, serial_number, class_level, fee_status')
-      .order('class_level', { ascending: true });
+      .select('id, user_id, reg_number, serial_number, class_level, fee_status');
 
-    if (studentErr) return res.status(400).json({ error: studentErr.message });
-
-    const userIds = (students || []).map(s => s.user_id).filter(Boolean);
-    let usersMap = {};
-
-    if (userIds.length > 0) {
-      const { data: usersData } = await supabase
-        .from('users')
-        .select('id, full_name, email, avatar_url')
-        .in('id', userIds);
-
-      (usersData || []).forEach(u => {
-        usersMap[u.id] = u;
-      });
+    if (studentErr) {
+      console.error('Warning fetching students table:', studentErr.message);
     }
 
-    const formattedStudents = (students || []).map(s => ({
-      ...s,
-      full_name: usersMap[s.user_id]?.full_name || 'Unnamed Student',
-      users: usersMap[s.user_id] || { full_name: 'Unnamed Student' }
-    }));
+    const profileByUserId = {};
+    (studentProfiles || []).forEach(p => {
+      if (p.user_id) profileByUserId[p.user_id] = p;
+    });
+
+    // 3. Merge user records with student profiles (auto-healing missing student rows)
+    const formattedStudents = [];
+    for (const u of studentUsers || []) {
+      let profile = profileByUserId[u.id];
+
+      if (!profile) {
+        const { data: createdProfile } = await supabase
+          .from('students')
+          .insert([{
+            user_id: u.id,
+            reg_number: `TBH/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
+            serial_number: `SN-${Math.floor(100000 + Math.random() * 900000)}`,
+            class_level: 'JSS 1',
+            fee_status: 'UNPAID'
+          }])
+          .select('id, user_id, reg_number, serial_number, class_level, fee_status')
+          .maybeSingle();
+
+        profile = createdProfile || { id: u.id, user_id: u.id, reg_number: 'N/A', class_level: 'Unassigned' };
+      }
+
+      formattedStudents.push({
+        id: profile.id,
+        user_id: u.id,
+        full_name: u.full_name || 'Unnamed Student',
+        email: u.email,
+        reg_number: profile.reg_number || '',
+        serial_number: profile.serial_number || '',
+        class_level: profile.class_level || '',
+        fee_status: profile.fee_status || 'UNPAID',
+        users: {
+          id: u.id,
+          full_name: u.full_name || 'Unnamed Student',
+          email: u.email,
+          avatar_url: u.avatar_url
+        }
+      });
+    }
 
     return res.status(200).json({ success: true, students: formattedStudents });
   } catch (err) {
