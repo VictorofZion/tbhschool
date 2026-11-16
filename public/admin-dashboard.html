@@ -665,6 +665,7 @@
       if (tabId === 'feesTab') fetchClassFees();
       if (tabId === 'resultsTab') loadStudentsDropdown();
       if (tabId === 'userManagementTab') loadStaffDropdown();
+      if (tabId === 'addQuestionsTab') loadExamsDropdown();
     }
 
     function toggleStudentFields() {
@@ -1108,17 +1109,100 @@
       } catch (err) { alert(err.message); }
     }
 
-    async function handleCreateExam(e) {
-      e.preventDefault();
-      alert("CBT Exam created successfully! You can now add questions to it.");
-    }
+   // Load existing CBT exams into #questionExamSelect
+async function loadExamsDropdown() {
+  const select = document.getElementById("questionExamSelect");
+  if (!select) return;
 
-    async function handleAddQuestion(e) {
-      e.preventDefault();
-      alert("Question saved to CBT Exam!");
-      document.getElementById("addQuestionForm").reset();
-    }
+  try {
+    const res = await fetch(`${API_BASE}/exams`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!res.ok) return;
 
+    const exams = data.exams || data || [];
+    select.innerHTML = '<option value="">-- Select Created Exam --</option>';
+    exams.forEach(exam => {
+      const option = document.createElement("option");
+      option.value = exam.id;
+      option.textContent = `${exam.title} (${exam.class_level || 'All Classes'})`;
+      select.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Failed to load exams:", err);
+  }
+}
+
+// Create & publish CBT Exam shell to /api/exams
+async function handleCreateExam(e) {
+  e.preventDefault();
+  const payload = {
+    title: document.getElementById("examTitle").value,
+    class_level: document.getElementById("examClassSelect").value,
+    duration_minutes: parseInt(document.getElementById("examDuration").value, 10) || 45,
+    is_published: true
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/exams`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to create CBT exam.");
+
+    alert("CBT Exam created and published! You can now add questions to it.");
+    document.getElementById("createExamForm").reset();
+    loadExamsDropdown();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// Add Question to selected CBT Exam via /api/exams/:examId/questions
+async function handleAddQuestion(e) {
+  e.preventDefault();
+  const examId = document.getElementById("questionExamSelect").value;
+  if (!examId) {
+    alert("Please select a CBT exam first.");
+    return;
+  }
+
+  const payload = {
+    question_text: document.getElementById("questionText").value,
+    option_a: document.getElementById("optionA").value,
+    option_b: document.getElementById("optionB").value,
+    option_c: document.getElementById("optionC").value,
+    option_d: document.getElementById("optionD").value,
+    correct_option: document.getElementById("correctOption").value
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/exams/${examId}/questions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save question.");
+
+    alert("Question saved to CBT Exam!");
+    document.getElementById("addQuestionForm").reset();
+    document.getElementById("questionExamSelect").value = examId;
+  } catch (err) {
+    alert(err.message);
+  }
+}
     async function handleMaterialUpload(e) {
       e.preventDefault();
       alert("Learning material uploaded successfully!");
