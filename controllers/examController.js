@@ -284,10 +284,26 @@ const submitExam = async (req, res) => {
   }
 };
 
+// Fetch all assessments for Admin & Teacher dropdowns
+const getAllExams = async (req, res) => {
+  try {
+    const { data: exams, error } = await supabase
+      .from('exams')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) return res.status(400).json({ error: error.message });
+    return res.status(200).json({ success: true, exams: exams || [] });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch assessments.' });
+  }
+};
+
 module.exports = {
   createExam,
   addQuestions,
   getExamsByClass,
+  getAllExams,
   getExamQuestions,
   submitExam
 };

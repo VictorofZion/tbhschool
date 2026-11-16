@@ -4,6 +4,7 @@ const { authenticateUser, authorizeRoles } = require('../middleware/auth');
 const {
   createExam,
   addQuestions,
+  getAllExams,
   getExamsByClass,
   getExamQuestions,
   submitExam
@@ -11,6 +12,7 @@ const {
 
 router.use(authenticateUser);
 
+router.get('/all', authorizeRoles('teacher'), getAllExams);
 router.post('/create', authorizeRoles('teacher', 'admin'), createExam);
 router.post('/add-questions', authorizeRoles('teacher', 'admin'), addQuestions);
 router.get('/class/:classLevel', getExamsByClass);
